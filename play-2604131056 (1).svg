@@ -1,0 +1,19 @@
+<div id="cloud-game" class="content">
+  <iframe 
+    src="https://cdn.jsdelivr.net/gh/CloudMoonApp/web@main/play-2604131056.html" 
+    id="cloud-moon-player"
+    style="width: 100%; height: 100%; border: none; border-radius: 12px;"
+    allow="autoplay; fullscreen; keyboard; gamepad"
+    referrerpolicy="no-referrer-when-downgrade">
+  </iframe>
+</div>
+
+<script>
+  // If the game specifically requires those URL parameters you had:
+  const iframe = document.getElementById('cloud-moon-player');
+  const currentParams = new URLSearchParams(window.location.search);
+  currentParams.set("t", Date.now()); // Refreshes the timestamp
+  
+  // Update the src with the parameters correctly
+  iframe.src = "https://cdn.jsdelivr.net/gh/CloudMoonApp/web@main/play-2604131056.html?" + currentParams.toString();
+</script>
