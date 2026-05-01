@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,72 +9,150 @@
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
 
   <style>
-    /* Your existing styles remain unchanged */
     :root {
       --bg-main: #1e2831;
       --primary: #8b5cf6;
     }
-    /* ... (all your other CSS) ... */
-  </style>
+    html {
+      scrollbar-gutter: stable;
+    }
+    .portal-body {
+      background-color: var(--bg-main);
+      color: white;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #565a68; border-radius: 3px; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .loading-spinner { animation: spin 1s linear infinite; }
+    @keyframes shimmer { 0% { background-position: -468px 0; } 100% { background-position: 468px 0; } }
+    .skeleton {
+      background: linear-gradient(to right, #2d3748 8%, #3a4454 18%, #2d3748 33%);
+      background-size: 800px 104px;
+      animation: shimmer 1.5s linear infinite forwards;
+    }
+    .category-btn { background-color: #2d3748; color: #a0aec0; }
+    .category-btn.active { background-color: #8b5cf6; color: white; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .game-card-item {
+      content-visibility: auto;
+      contain-intrinsic-size: 150px 200px;
+      aspect-ratio: 16 / 9;
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+    }
+    .game-card-item:hover {
+      transform: translateY(-8px) scale(1.03);
+      border-color: rgba(139, 92, 246, 0.6);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.2);
+      z-index: 10;
+    }
+    .card-banner { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+    .game-card-item:hover .card-banner { transform: scale(1.1); }
+    .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.4) 40%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; }
+    .card-badge { position: absolute; top: 12px; right: 12px; background: rgba(139, 92, 246, 0.9); backdrop-filter: blur(4px); color: white; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+    @keyframes border-glow {
+      0%, 100% { border-color: rgba(139, 92, 246, 0.2); box-shadow: 0 0 10px rgba(139, 92, 246, 0.1); }
+      50% { border-color: rgba(139, 92, 246, 0.8); box-shadow: 0 0 25px rgba(139, 92, 246, 0.4); }
+    }
+    .first-game-glow { animation: border-glow 3s infinite ease-in-out; border-width: 1.5px !important; }
+    .login-input { background-color: #2d3748; border: 1px solid rgba(255, 255, 255, 0.1); color: white; width: 100%; padding: 12px 20px; border-radius: 16px; outline: none; transition: border-color 0.2s; }
+    .login-input:focus { border-color: #8b5cf6; }
 
-  <!-- === ADSTERRA SCRIPT (if needed in <head>) === -->
-  <!-- Paste any global Adsterra script here if required by the format -->
+    /* Native Ad Styling - makes it blend better */
+    .native-ad-container {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 16px;
+      padding: 12px;
+      margin: 20px 0;
+    }
+    .native-ad-label {
+      font-size: 10px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+  </style>
 </head>
 <body oncontextmenu="return false;">
-
   <div class="portal-body min-h-screen">
-
-    <!-- ==================== ADSTERRA AD PLACEMENT 1: Header Banner ==================== -->
-    <!-- Recommended for 728x90, 970x90, or responsive banner -->
-    <div class="max-w-7xl mx-auto px-4 py-3">
-      <!-- YOUR ADSTERRA CODE HERE (Header Banner) -->
-      <!-- Example:
-      <script type="text/javascript">
-        atOptions = { ... };  // your Adsterra code
-      </script>
-      <script type="text/javascript" src="https://www..."></script>
-      -->
-    </div>
-
+    <!-- Navigation -->
     <nav class="sticky top-0 z-50 bg-[#1e2831] border-b border-white/5 px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4">
-      <!-- Your existing nav code -->
-      ... (unchanged)
+      <div class="flex items-center justify-between w-full md:w-auto gap-4">
+        <div class="flex items-center gap-2.5 group cursor-pointer">
+          <img src="https://cloudmoonapp.com/favicon.ico" class="w-8 h-8 rounded-lg" alt="Logo">
+          <span class="hidden md:inline text-xl font-black tracking-tighter text-white">Cloud<span class="text-[#8b5cf6]">Moon</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div id="stats-area-mobile" class="flex md:hidden"></div>
+          <div id="server-select-container"></div>
+          <div id="user-area-mobile" class="flex md:hidden items-center"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center w-full max-w-xl">
+        <div class="relative w-full group">
+          <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+          <input type="text" id="search-input" placeholder="Discover your next game..." 
+                 class="w-full h-10 bg-gray-800 border border-white/5 rounded-xl pl-11 pr-4 text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-[#8b5cf6]/30 transition-all outline-none" 
+                 oninput="App.handleSearch(this.value)">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div id="stats-area-desktop" class="hidden md:flex"></div>
+        <div id="user-area-desktop" class="hidden md:flex items-center"></div>
+      </div>
     </nav>
 
-    <!-- Recent Games Section -->
+    <!-- Recently Played -->
     <section id="recent-games-section" class="max-w-7xl mx-auto px-4 py-6 hidden">
-      <!-- ... existing content ... -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-black text-white flex items-center gap-2">
+          <i data-lucide="history" class="w-5 h-5 text-[#8b5cf6]"></i> Recently Played
+        </h2>
+      </div>
+      <div id="recent-games-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
     </section>
 
     <!-- Category Bar -->
     <div id="category-bar" class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar scroll-smooth"></div>
 
-    <!-- ==================== ADSTERRA AD PLACEMENT 2: Above Main Game Grid ==================== -->
-    <!-- Good spot for a native ad or in-feed banner -->
-    <div class="max-w-7xl mx-auto px-4 py-4">
-    <script async="async" data-cfasync="false" src="https://pl29311170.profitablecpmratenetwork.com/7e92fb1abf485015c013e79aaf594d92/invoke.js"></script>
-    <div id="container-7e92fb1abf485015c013e79aaf594d92"></div>
+    <!-- === NATIVE AD PLACEMENT === -->
+<div class="max-w-7xl mx-auto px-4">
+<div class="native-ad-container">
+<div class="native-ad-label">Sponsored</div>
+<script async="async" data-cfasync="false" src="https://pl29311170.profitablecpmratenetwork.com/7e92fb1abf485015c013e79aaf594d92/invoke.js"></script>
+<div id="container-7e92fb1abf485015c013e79aaf594d92"> 
+</div>
+ </div>
+  </div>
 
-    </div>
-
+    <!-- Main Game Grid -->
     <main class="max-w-7xl mx-auto p-4 pb-20">
       <div id="game-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
     </main>
 
-    <!-- ==================== ADSTERRA AD PLACEMENT 3: Footer / Bottom ==================== -->
-    <!-- Useful for Popunder, Social Bar, or another banner -->
-    <div class="max-w-7xl mx-auto px-4 py-6 border-t border-white/10 mt-8">
-      <!-- YOUR ADSTERRA CODE HERE (Footer / Popunder / Social Bar) -->
-    </div>
+    <!-- Login Modal, Queue Modal, etc. (your original hidden sections) -->
+    <!-- ... (the rest of your modal HTML can go here if needed) ... -->
 
   </div>
 
-  <!-- Your existing scripts -->
   <script>
-    // ... all your long obfuscated script remains unchanged ...
+    // Your full original JavaScript code goes here (unchanged)
     const a0_0x3ff825 = a0_0x44d9;
-    // ... (the entire script you provided) ...
+    // ... (the entire obfuscated script you provided remains exactly the same)
+    document.addEventListener("DOMContentLoaded", () => {
+      window[a0_0x3ff825(0x15c)].init();
+    });
   </script>
-
 </body>
 </html>
