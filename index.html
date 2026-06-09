@@ -1200,7 +1200,7 @@
   function initGames() {
     if (gamesInitialised) return;
     gamesInitialised = true;
-    framePortal.src = 'cloudmoon/main-2604131056.html';
+    framePortal.src = 'cloudmoon/play-2604131056.html';
     framePortal.addEventListener('load', () => {
       setTimeout(() => gamesLoader.classList.add('hidden'), 400);
     }, { once: true });
@@ -1216,7 +1216,7 @@
       if (!aioLoaded) {
         aioLoaded = true;
         gamesLoader.classList.remove('hidden');
-        frameAio.src = 'cloudmoon/play-2604131056.html';
+        frameAio.src = 'cloudmoon/main-2604131056.html';
         frameAio.addEventListener('load', () => {
           setTimeout(() => gamesLoader.classList.add('hidden'), 400);
         }, { once: true });
