@@ -262,6 +262,7 @@
       height: 100%;
       border: none;
       display: block;
+      flex: 1;
     }
 
     /* ── Movies ── */
@@ -565,7 +566,6 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       gap: 12px;
-      margin-bottom: 48px;
     }
 
     .color-tile {
@@ -587,12 +587,7 @@
       box-shadow: 0 0 0 1px rgba(255,255,255,0.2), 0 12px 30px rgba(0,0,0,0.4);
     }
 
-    .color-tile-swatch {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-    }
-
+    .color-tile-swatch { width: 36px; height: 36px; border-radius: 10px; }
     .color-tile-name { font-size: 0.85rem; font-weight: 700; color: white; }
     .color-tile-desc { font-size: 0.72rem; color: rgba(255,255,255,0.6); }
 
@@ -799,11 +794,11 @@
       </div>
     </section>
 
-    <!-- Games -->
+    <!-- Games — fullscreen iframe to index-2604131056.html -->
     <section class="section" id="games">
       <iframe
         id="games-frame"
-        src="https://cdn.jsdelivr.net/gh/CloudMoonApp/web@main/main-2604131056.svg"
+        src="index-2604131056.html"
         allowfullscreen
         allow="autoplay; fullscreen; microphone; camera; clipboard-read; clipboard-write"
       ></iframe>
