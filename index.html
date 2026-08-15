@@ -3,15 +3,78 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arcade Hub</title>
+  <title>Learning V4</title>
   <link rel="icon" href="rose-in-teeth-blue-emoji-blue.png" />
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Fullscreen Mode: Hide Sidebar & Topbar */
+    :root:has(:fullscreen) .sidebar,
+    :root:has(:fullscreen) .topbar {
+      display: none !important;
+    }
+
+    :root:has(:fullscreen) .content-area {
+      width: 100vw !important;
+      height: 100vh !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Floating Small Back Button for Games */
+    .game-back-btn {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s;
+    }
+
+    .game-back-btn:hover {
+      background: rgba(0, 0, 0, 0.85);
+    }
+
+    .game-back-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Clean Full-Area Player Layouts */
+    .game-player-box, .player-box {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-player-frame-wrap, .player-frame-wrap {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    .game-player-frame-wrap iframe, .player-frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
 </head>
 <body>
 
 <div class="app">
 
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">
@@ -76,7 +139,6 @@
     </div>
   </aside>
 
-  <!-- Content Area -->
   <div class="content-area">
     <header class="topbar">
       <div class="topbar-title" id="topbar-title">Home</div>
@@ -85,7 +147,6 @@
 
     <main class="main" id="main-content">
 
-      <!-- Home -->
       <section class="section active" id="home">
         <canvas id="particles-canvas"></canvas>
         <div class="home-content">
@@ -181,7 +242,6 @@
         </div>
       </section>
 
-      <!-- Cloud Gaming — fullscreen iframe -->
       <section class="section" id="cloud-gaming">
         <div class="floating-fullscreen-btn">
           <button class="icon-btn accent" title="Fullscreen" onclick="toggleFullscreen('cloud-gaming')">
@@ -198,7 +258,6 @@
         ></iframe>
       </section>
 
-      <!-- Games (HTML5) -->
       <section class="section" id="games">
         <div class="games-wrap">
           <div class="section-header">
@@ -208,31 +267,15 @@
           <div id="games-grid" class="games-grid"></div>
         </div>
 
-        <!-- Game Player Modal -->
         <div id="game-player-modal" class="game-player-modal hidden">
           <div class="game-player-backdrop" onclick="closeGamePlayer()"></div>
           <div class="game-player-box" id="game-player-box">
-            <div class="game-player-header">
-              <button class="text-btn" onclick="closeGamePlayer()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Back
-              </button>
-              <span id="game-player-title" class="game-player-title"></span>
-              <div class="game-player-actions">
-                <button class="icon-btn accent" title="Fullscreen" onclick="toggleFullscreen('game-player-box')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/>
-                  </svg>
-                </button>
-                <button class="icon-btn" title="Close" onclick="closeGamePlayer()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
+            <button class="game-back-btn" onclick="closeGamePlayer()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              Back
+            </button>
             <div class="game-player-frame-wrap">
               <iframe id="game-player-frame" allowfullscreen allow="autoplay; fullscreen; gamepad; microphone; camera"></iframe>
             </div>
@@ -240,7 +283,6 @@
         </div>
       </section>
 
-      <!-- Movies -->
       <section class="section" id="movies">
         <div class="movies-wrap">
           <div class="section-header">
@@ -273,21 +315,6 @@
         <div id="player-modal" class="player-modal hidden">
           <div class="player-backdrop" onclick="closePlayer()"></div>
           <div class="player-box" id="movie-player-box">
-            <div class="player-header">
-              <span id="player-title" class="player-title"></span>
-              <div class="player-actions">
-                <button class="icon-btn accent" title="Fullscreen" onclick="toggleFullscreen('movie-player-box')">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/>
-                  </svg>
-                </button>
-                <button class="icon-btn" title="Close" onclick="closePlayer()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
             <div class="player-frame-wrap">
               <iframe id="player-frame" allowfullscreen allow="autoplay; fullscreen"></iframe>
             </div>
@@ -303,7 +330,6 @@
         </div>
       </section>
 
-      <!-- Settings -->
       <section class="section" id="settings">
 
         <div class="settings-preview">
@@ -328,7 +354,6 @@
   </div>
 </div>
 
-<!-- Input device status indicators -->
 <div class="input-status">
   <div class="input-badge" id="controller-badge">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -348,7 +373,6 @@
   </div>
 </div>
 
-<!-- Controller connection toast -->
 <div class="input-toast" id="input-toast">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <rect x="2" y="6" width="20" height="12" rx="4"/>
