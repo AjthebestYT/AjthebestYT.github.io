@@ -288,14 +288,35 @@
             <h1>Games</h1>
             <p>Browse and play HTML5 games right in your browser.</p>
           </div>
-          <div id="games-grid" class="games-grid"></div>
+          <div id="games-grid" class="games-grid">
+            <div class="game-card" data-url="games/drift-hunters.html" data-name="Drift Hunters" data-image="games/drift-hunters.jpg">
+              <div class="game-card-image">
+                <img src="icons/drift-hunters.jpg" alt="Drift Hunters" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:2rem;&quot;>🎮</div>'">
+              </div>
+              <div class="game-card-name">Drift Hunters</div>
+            </div>
+
+            <div class="game-card" data-url="games/gta-vice-city.html" data-name="GTA Vice City" data-image="games/gta-vice-city.jpg">
+              <div class="game-card-image">
+                <img src="icons/gta-vice-city.jpg" alt="GTA Vice City" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:2rem;&quot;>🎮</div>'">
+              </div>
+              <div class="game-card-name">GTA Vice City</div>
+            </div>
+
+            <div class="game-card" data-url="games/spacewaves.html" data-name="Space Waves" data-image="games/spacewaves.jpg">
+              <div class="game-card-image">
+                <img src="icons/spacewaves.jpg" alt="Space Waves" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.7);font-size:2rem;&quot;>🎮</div>'">
+              </div>
+              <div class="game-card-name">Space Waves</div>
+            </div>
+          </div>
         </div>
 
         <div id="game-player-modal" class="game-player-modal hidden">
           <div class="game-player-backdrop" onclick="closeGamePlayer()"></div>
           <div class="game-player-box" id="game-player-box">
             <span id="game-player-title" class="js-hidden-title"></span>
-            
+
             <div class="floating-controls">
               <button class="player-btn" onclick="closeGamePlayer()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

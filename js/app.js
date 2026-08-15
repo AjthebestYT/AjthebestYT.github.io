@@ -104,75 +104,29 @@ function buildPalette() {
 //  HTML5 Games
 // ═══════════════════════════════════════════════════════════════
 
-// Each game can optionally have an `icon` (small square image shown on the
-// card) and a `thumb` (bigger 16:9 preview image for the card banner).
-// Leave them as null/empty string to use the built-in placeholder icon —
-// fill in a URL or local path whenever you want to add your own artwork.
-const html5Games = [
-  {
-    id: 'drift-hunters',
-    title: 'Drift Hunters',
-    desc: '3D car drifting game. Race and customize your cars.',
-    badge: 'HTML5',
-    icon: '',   // e.g. 'games/icons/drift-hunters.png' — leave blank for placeholder
-    thumb: '',  // e.g. 'games/thumbs/drift-hunters.jpg' — leave blank for placeholder
-    file: 'games/drift-hunters.html'
-  },
-  // Add more games here as { id, title, desc, badge, icon, thumb, file }
-];
-
-let gamesRendered = false;
-
-function gameIconPlaceholderSVG() {
-  return `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="2" y="6" width="20" height="12" rx="4"/>
-      <path d="M8 12h4M10 10v4"/>
-      <circle cx="16" cy="11" r="1" fill="currentColor" stroke="none"/>
-      <circle cx="18" cy="13" r="1" fill="currentColor" stroke="none"/>
-    </svg>`;
-}
+// Add games directly in the page HTML:
+// 1. Duplicate the .game-card block in index.html
+// 2. Change data-game-file, data-game-title, and the text inside
+// 3. No JavaScript array or render function is needed
 
 function renderGames() {
   const grid = document.getElementById('games-grid');
   if (!grid) return;
 
+  const cards = [...grid.querySelectorAll('.game-card')];
   const statEl = document.getElementById('stat-games-count');
-  if (statEl) statEl.textContent = html5Games.length;
+  if (statEl) statEl.textContent = cards.length;
 
-  if (gamesRendered) return;
+  cards.forEach(card => {
+    if (card.dataset.bound === 'true') return;
+    card.dataset.bound = 'true';
 
-  grid.innerHTML = html5Games.map(g => `
-    <div class="game-card" data-game-file="${g.file}" data-game-title="${g.title}">
-      ${g.badge ? `<div class="game-card-badge">${g.badge}</div>` : ''}
-      <div class="game-card-thumb">
-        ${g.thumb
-          ? `<img src="${g.thumb}" alt="${g.title}">`
-          : `<div class="game-card-icon-placeholder">${gameIconPlaceholderSVG()}</div>`
-        }
-        <div class="game-card-play-overlay">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        </div>
-      </div>
-      <div class="game-card-info">
-        <div class="game-card-icon">
-          ${g.icon ? `<img src="${g.icon}" alt="">` : gameIconPlaceholderSVG()}
-        </div>
-        <div class="game-card-text">
-          <div class="game-card-title">${g.title}</div>
-          <div class="game-card-desc">${g.desc}</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
+    const url = card.dataset.gameFile || card.dataset.url;
+    const title = card.dataset.gameTitle || card.dataset.name || card.querySelector('.game-card-name')?.textContent?.trim() || 'Game';
 
-  grid.querySelectorAll('.game-card').forEach(card => {
-    card.addEventListener('click', () => openGame(card.dataset.gameFile, card.dataset.gameTitle));
+    card.addEventListener('click', () => openGame(url, title));
   });
 
-  gamesRendered = true;
   updateFocusableElements();
 }
 
