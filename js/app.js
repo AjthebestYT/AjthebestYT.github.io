@@ -241,26 +241,42 @@ function handleMovieSearch(val) {
   }, 400);
 }
 
+async function fetchJsonWithTimeout(url, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchMovies() {
   showMoviesLoading();
   try {
     const endpoint = currentMovieTab === 'movies'
       ? `${TMDB_BASE}/movie/popular?api_key=${TMDB_KEY}&language=en-US&page=1`
       : `${TMDB_BASE}/tv/popular?api_key=${TMDB_KEY}&language=en-US&page=1`;
-    const res  = await fetch(endpoint);
-    const data = await res.json();
+    const data = await fetchJsonWithTimeout(endpoint);
     renderGrid(data.results, currentMovieTab);
-  } catch { showMoviesError(); }
+  } catch {
+    showMoviesError();
+  }
 }
 
 async function searchContent(query) {
   showMoviesLoading();
   try {
     const type = currentMovieTab === 'movies' ? 'movie' : 'tv';
-    const res  = await fetch(`${TMDB_BASE}/search/${type}?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&page=1`);
-    const data = await res.json();
+    const endpoint = `${TMDB_BASE}/search/${type}?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&page=1`;
+    const data = await fetchJsonWithTimeout(endpoint);
     renderGrid(data.results, currentMovieTab);
-  } catch { showMoviesError(); }
+  } catch {
+    showMoviesError();
+  }
 }
 
 function renderGrid(items, type) {
@@ -328,8 +344,7 @@ async function openContent(id, type, title) {
 
 async function loadSeasons(showId) {
   try {
-    const res  = await fetch(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_KEY}`);
-    const data = await res.json();
+    const data = await fetchJsonWithTimeout(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_KEY}`);
     const sel  = document.getElementById('season-select');
     sel.innerHTML = data.seasons
       .filter(s => s.season_number > 0)
@@ -342,8 +357,7 @@ async function loadSeasons(showId) {
 async function loadEpisodes() {
   const season = document.getElementById('season-select').value;
   try {
-    const res  = await fetch(`${TMDB_BASE}/tv/${currentShowId}/season/${season}?api_key=${TMDB_KEY}`);
-    const data = await res.json();
+    const data = await fetchJsonWithTimeout(`${TMDB_BASE}/tv/${currentShowId}/season/${season}?api_key=${TMDB_KEY}`);
     const sel  = document.getElementById('episode-select');
     sel.innerHTML = (data.episodes || [])
       .map(ep => `<option value="${ep.episode_number}">Ep ${ep.episode_number}: ${ep.name}</option>`)
