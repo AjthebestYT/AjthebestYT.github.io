@@ -29,6 +29,16 @@ function switchSection(name) {
   // Reset scroll
   document.getElementById('main-content')?.scrollTo(0, 0);
 
+  // Ignore parent controller navigation while a game/video is open in an iframe.
+  if (document.getElementById('game-player-modal')?.classList.contains('hidden') === false ||
+      document.getElementById('player-modal')?.classList.contains('hidden') === false ||
+      document.getElementById('cloud-gaming')?.classList.contains('active')) {
+    removeControllerFocus();
+    buttonStates.a = false;
+    buttonStates.b = false;
+    buttonStates.y = false;
+  }
+
   // Update focusable list for controller
   updateFocusableElements();
 }
@@ -109,6 +119,25 @@ function buildPalette() {
 // 2. Change data-game-file, data-game-title, and the text inside
 // 3. No JavaScript array or render function is needed
 
+function filterGames(query = '') {
+  const grid = document.getElementById('games-grid');
+  if (!grid) return;
+
+  const cards = [...grid.querySelectorAll('.game-card')];
+  const term = query.trim().toLowerCase();
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const title = (card.dataset.name || card.querySelector('.game-card-name')?.textContent || '').toLowerCase();
+    const match = !term || title.includes(term);
+    card.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+
+  const statEl = document.getElementById('stat-games-count');
+  if (statEl) statEl.textContent = visibleCount;
+}
+
 function renderGames() {
   const grid = document.getElementById('games-grid');
   if (!grid) return;
@@ -127,18 +156,33 @@ function renderGames() {
     card.addEventListener('click', () => openGame(url, title));
   });
 
+  const gamesSearch = document.getElementById('games-search');
+  if (gamesSearch && !gamesSearch.dataset.bound) {
+    gamesSearch.dataset.bound = 'true';
+    gamesSearch.addEventListener('input', (e) => filterGames(e.target.value));
+  }
+
+  filterGames(gamesSearch?.value || '');
   updateFocusableElements();
 }
 
 function openGame(file, title) {
+  removeControllerFocus();
   document.getElementById('game-player-title').textContent = title;
   document.getElementById('game-player-frame').src = file;
   document.getElementById('game-player-modal').classList.remove('hidden');
+  buttonStates.a = false;
+  buttonStates.b = false;
+  buttonStates.y = false;
 }
 
 function closeGamePlayer() {
   document.getElementById('game-player-modal').classList.add('hidden');
   document.getElementById('game-player-frame').src = '';
+  buttonStates.a = false;
+  buttonStates.b = false;
+  buttonStates.y = false;
+  updateFocusableElements();
   exitFullscreenIfActive();
 }
 
@@ -535,6 +579,16 @@ function goBack() {
 // Button state tracking (debounce)
 const buttonStates = {};
 
+function isEmbeddedPlayerActive() {
+  const gameModal = document.getElementById('game-player-modal');
+  const movieModal = document.getElementById('player-modal');
+  const cloudGaming = document.getElementById('cloud-gaming');
+
+  return (gameModal && !gameModal.classList.contains('hidden')) ||
+         (movieModal && !movieModal.classList.contains('hidden')) ||
+         !!(cloudGaming && cloudGaming.classList.contains('active'));
+}
+
 function startGamepadPolling() {
   gamepadPolling = true;
 
@@ -543,6 +597,14 @@ function startGamepadPolling() {
     let gp = null;
     for (const pad of gamepads) {
       if (pad) { gp = pad; break; }
+    }
+
+    if (isEmbeddedPlayerActive()) {
+      buttonStates.a = false;
+      buttonStates.b = false;
+      buttonStates.y = false;
+      requestAnimationFrame(poll);
+      return;
     }
 
     if (gp) {
