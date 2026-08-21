@@ -4,15 +4,16 @@
 
 const sections = ['home', 'cloud-gaming', 'games', 'movies', 'chat', 'account', 'settings', 'temp-email'];
 
+const sections = ['home', 'cloud-gaming', 'games', 'movies', 'account', 'settings', 'temp-email'];
+
 const sectionTitles = {
   'home': 'Home',
   'cloud-gaming': 'Cloud Gaming',
   'games': 'Games',
   'movies': 'Movies',
-  'chat': 'Chat',
   'account': 'Account',
   'settings': 'Settings',
-  'temp-email': 'Temp Email'
+  'temp-email': 'Raccoon Game & Email'
 };
 function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(tab => {
