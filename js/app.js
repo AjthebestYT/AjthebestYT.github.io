@@ -2,7 +2,8 @@
 //  Navigation
 // ═══════════════════════════════════════════════════════════════
 
-const sections = ['home', 'cloud-gaming', 'games', 'movies', 'chat', 'account', 'settings'];
+const sections = ['home', 'cloud-gaming', 'games', 'movies', 'chat', 'account', 'settings', 'temp-email'];
+
 const sectionTitles = {
   'home': 'Home',
   'cloud-gaming': 'Cloud Gaming',
@@ -11,6 +12,7 @@ const sectionTitles = {
   'chat': 'Chat',
   'account': 'Account',
   'settings': 'Settings',
+  'temp-email': 'Temp Email'
 };
 
 function switchSection(name) {
