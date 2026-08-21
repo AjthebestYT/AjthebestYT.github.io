@@ -15,24 +15,28 @@ const sectionTitles = {
   'settings': 'Settings',
   'temp-email': 'Raccoon Game & Email'
 };
-function switchTab(tabId) {
-  document.querySelectorAll('.tab-content').forEach(tab => {
+function switchTab(tabId, btnElement) {
+  // Hide all tab content divs
+  document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
     tab.style.display = 'none';
   });
 
-  document.querySelectorAll('.tab-btn').forEach(btn => {
+  // Reset button styling
+  document.querySelectorAll('#temp-email .tab-btn').forEach(btn => {
     btn.style.background = 'transparent';
     btn.style.color = '#ccc';
   });
 
+  // Show the selected tab
   const activeTab = document.getElementById(tabId);
   if (activeTab) {
     activeTab.style.display = 'block';
   }
 
-  if (event && event.currentTarget) {
-    event.currentTarget.style.background = '#84cc16';
-    event.currentTarget.style.color = '#000';
+  // Highlight the clicked button reliably
+  if (btnElement) {
+    btnElement.style.background = '#84cc16';
+    btnElement.style.color = '#000';
   }
 }
 function switchSection(name) {
