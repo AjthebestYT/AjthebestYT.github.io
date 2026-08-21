@@ -14,7 +14,24 @@ const sectionTitles = {
   'settings': 'Settings',
   'temp-email': 'Temp Email'
 };
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.style.display = 'none';
+  });
 
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.style.background = 'transparent';
+    btn.style.color = '#ccc';
+  });
+
+  const activeTab = document.getElementById(tabId);
+if (activeTab) { activeTab.style.display = 'block'; }
+
+  if (event && event.currentTarget) {
+    event.currentTarget.style.background = '#84cc16';
+    event.currentTarget.style.color = '#000';
+  }
+}
 function switchSection(name) {
   sections.forEach(s => {
     document.getElementById(s)?.classList.toggle('active', s === name);
