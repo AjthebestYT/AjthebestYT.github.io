@@ -46,28 +46,60 @@ async function loadProxyBlob(tabId) {
 }
 
 // Handles switching tabs and fetching blob content on demand
-function switchTab(tabId, btnElement) {
+// Helper to resolve URLs through your current proxy environment
+function getProxiedUrl(targetUrl) {
+  // If running inside Webfuse or a custom proxy, append the proxy prefix
+  const currentOrigin = window.location.origin;
+  const proxyPrefix = window.__uv$config?.prefix || '/proxy/'; // Adjust if using Ultraviolet or standard proxy
+
+  // If inside Webfuse, route through its active domain path
+  if (window.location.host.includes('webfuse.com')) {
+    return `${currentOrigin}/proxy/${targetUrl}`;
+  }
+
+  // Standard fallback using your environment's relative proxy route
+  return `${proxyPrefix}${targetUrl}`;
+}
+
+// Function to handle tab switching and proxy loading
+function switchTab(tabId, targetUrl, btnElement) {
+  // Hide all tab containers
   document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
     tab.style.display = 'none';
   });
 
+  // Reset tab button styling
   document.querySelectorAll('#temp-email .tab-btn').forEach(btn => {
     btn.style.background = 'transparent';
     btn.style.color = '#ccc';
   });
 
+  // Display targeted tab
   const activeTab = document.getElementById(tabId);
   if (activeTab) {
     activeTab.style.display = 'block';
-    loadProxyBlob(tabId); // Dynamically load content as a Blob URL
+
+    // Load the proxy-encoded URL into the iframe if not already loaded
+    const iframe = activeTab.querySelector('iframe');
+    if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
+      iframe.src = getProxiedUrl(targetUrl);
+    }
   }
 
+  // Highlight active button
   if (btnElement) {
     btnElement.style.background = '#84cc16';
     btnElement.style.color = '#000';
   }
 }
 
+// Automatically load default Raccoon tab on initial setup
+document.addEventListener('DOMContentLoaded', () => {
+  const raccoonBtn = document.querySelector('#temp-email .tab-btn');
+  if (raccoonBtn) {
+    switchTab('tab-raccoon', 'https://raccoongame.com/', raccoonBtn);
+  }
+});
 // Automatically load default tab when the main section opens
 document.addEventListener('DOMContentLoaded', () => {
   loadProxyBlob('tab-raccoon');
