@@ -2,12 +2,14 @@
 //  Navigation
 // ═══════════════════════════════════════════════════════════════
 
-const sections = ['home', 'cloud-gaming', 'games', 'movies', 'settings'];
+const sections = ['home', 'cloud-gaming', 'games', 'movies', 'chat', 'account', 'settings'];
 const sectionTitles = {
   'home': 'Home',
   'cloud-gaming': 'Cloud Gaming',
   'games': 'Games',
   'movies': 'Movies',
+  'chat': 'Chat',
+  'account': 'Account',
   'settings': 'Settings',
 };
 
