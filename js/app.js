@@ -15,30 +15,63 @@ const sectionTitles = {
   'settings': 'Settings',
   'temp-email': 'Raccoon Game & Email'
 };
+// Map tabs to their actual target URLs
+const tabUrls = {
+  'tab-raccoon': 'https://raccoongame.com/',
+  'tab-tempmail': 'https://mail.tm/en/'
+};
+
+// Fetches site content via CORS proxy and builds a same-origin Blob URL
+async function loadProxyBlob(tabId) {
+  const targetUrl = tabUrls[tabId];
+  if (!targetUrl) return;
+
+  const iframe = document.querySelector(`#${tabId} iframe`);
+  if (!iframe || iframe.src) return; // Prevent reloading if already loaded
+
+  try {
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+    const response = await fetch(proxyUrl);
+    let html = await response.text();
+
+    // Inject a base tag so relative assets inside the iframe load correctly
+    html = `<head><base href="${targetUrl}"></head>` + html;
+
+    const blob = new Blob([html], { type: 'text/html' });
+    iframe.src = URL.createObjectURL(blob);
+  } catch (err) {
+    // Fallback to direct URL if fetch fails
+    iframe.src = targetUrl;
+  }
+}
+
+// Handles switching tabs and fetching blob content on demand
 function switchTab(tabId, btnElement) {
-  // Hide all tab content divs
   document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
     tab.style.display = 'none';
   });
 
-  // Reset button styling
   document.querySelectorAll('#temp-email .tab-btn').forEach(btn => {
     btn.style.background = 'transparent';
     btn.style.color = '#ccc';
   });
 
-  // Show the selected tab
   const activeTab = document.getElementById(tabId);
   if (activeTab) {
     activeTab.style.display = 'block';
+    loadProxyBlob(tabId); // Dynamically load content as a Blob URL
   }
 
-  // Highlight the clicked button reliably
   if (btnElement) {
     btnElement.style.background = '#84cc16';
     btnElement.style.color = '#000';
   }
 }
+
+// Automatically load default tab when the main section opens
+document.addEventListener('DOMContentLoaded', () => {
+  loadProxyBlob('tab-raccoon');
+});
 function switchSection(name) {
   sections.forEach(s => {
     document.getElementById(s)?.classList.toggle('active', s === name);
