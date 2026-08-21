@@ -16,52 +16,6 @@ const sectionTitles = {
   'temp-email': 'Raccoon Game & Email'
 };
 // Map tabs to their actual target URLs
-const tabUrls = {
-  'tab-raccoon': 'https://raccoongame.com/',
-  'tab-tempmail': 'https://mail.tm/en/'
-};
-
-// Fetches site content via CORS proxy and builds a same-origin Blob URL
-async function loadProxyBlob(tabId) {
-  const targetUrl = tabUrls[tabId];
-  if (!targetUrl) return;
-
-  const iframe = document.querySelector(`#${tabId} iframe`);
-  if (!iframe || iframe.src) return; // Prevent reloading if already loaded
-
-  try {
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
-    const response = await fetch(proxyUrl);
-    let html = await response.text();
-
-    // Inject a base tag so relative assets inside the iframe load correctly
-    html = `<head><base href="${targetUrl}"></head>` + html;
-
-    const blob = new Blob([html], { type: 'text/html' });
-    iframe.src = URL.createObjectURL(blob);
-  } catch (err) {
-    // Fallback to direct URL if fetch fails
-    iframe.src = targetUrl;
-  }
-}
-
-// Handles switching tabs and fetching blob content on demand
-// Helper to resolve URLs through your current proxy environment
-function getProxiedUrl(targetUrl) {
-  // If running inside Webfuse or a custom proxy, append the proxy prefix
-  const currentOrigin = window.location.origin;
-  const proxyPrefix = window.__uv$config?.prefix || '/proxy/'; // Adjust if using Ultraviolet or standard proxy
-
-  // If inside Webfuse, route through its active domain path
-  if (window.location.host.includes('webfuse.com')) {
-    return `${currentOrigin}/proxy/${targetUrl}`;
-  }
-
-  // Standard fallback using your environment's relative proxy route
-  return `${proxyPrefix}${targetUrl}`;
-}
-
-// Function to handle tab switching and proxy loading
 function switchTab(tabId, url, btnElement) {
   // Hide all tab content containers
   document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
@@ -79,6 +33,20 @@ function switchTab(tabId, url, btnElement) {
     btnElement.style.background = '#84cc16';
     btnElement.style.color = '#000';
   }
+
+  // Display the target tab container
+  const activeTab = document.getElementById(tabId);
+  if (!activeTab) return;
+  activeTab.style.display = 'block';
+
+  const iframe = activeTab.querySelector('iframe');
+  if (!iframe) return;
+
+  // Set the URL dynamically so Webfuse intercepts and proxies the request
+  if (iframe.src !== url) {
+    iframe.src = url;
+  }
+}
 
   // Display the target tab container
   const activeTab = document.getElementById(tabId);
