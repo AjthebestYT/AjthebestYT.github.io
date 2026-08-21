@@ -26,7 +26,9 @@ function switchTab(tabId) {
   });
 
   const activeTab = document.getElementById(tabId);
-if (activeTab) { activeTab.style.display = 'block'; }
+  if (activeTab) {
+    activeTab.style.display = 'block';
+  }
 
   if (event && event.currentTarget) {
     event.currentTarget.style.background = '#84cc16';
