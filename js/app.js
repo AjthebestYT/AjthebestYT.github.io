@@ -15,39 +15,44 @@ const sectionTitles = {
   'settings': 'Settings',
   'temp-email': 'Raccoon Game & Email'
 };
-// Map tabs to their actual target URLs
-function switchTab(tabId, url, btnElement) {
-  // Hide all tab content containers
-  document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
-    tab.style.display = 'none';
+// Sidebar Navigation Logic
+document.addEventListener('DOMContentLoaded', () => {
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.section');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetSection = item.getAttribute('data-section');
+      if (!targetSection) return;
+
+      // Update active highlight on sidebar buttons
+      navItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+
+      // Hide all sections
+      sections.forEach(sec => {
+        sec.style.display = 'none';
+        sec.classList.remove('active');
+      });
+
+      // Show the requested section
+      const activeEl = document.getElementById(targetSection);
+      if (activeEl) {
+        activeEl.style.display = 'block';
+        activeEl.classList.add('active');
+
+        // Automatically trigger Raccoon tab if opening temp-email
+        if (targetSection === 'temp-email') {
+          const defaultBtn = activeEl.querySelector('.tab-btn');
+          if (defaultBtn) {
+            switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
+          }
+        }
+      }
+    });
   });
-
-  // Reset tab button background styles
-  document.querySelectorAll('#temp-email .tab-btn').forEach(btn => {
-    btn.style.background = 'transparent';
-    btn.style.color = '#ccc';
-  });
-
-  // Highlight active tab button
-  if (btnElement) {
-    btnElement.style.background = '#84cc16';
-    btnElement.style.color = '#000';
-  }
-
-  // Display the target tab container
-  const activeTab = document.getElementById(tabId);
-  if (!activeTab) return;
-  activeTab.style.display = 'block';
-
-  const iframe = activeTab.querySelector('iframe');
-  if (!iframe) return;
-
-  // Set the URL dynamically so Webfuse intercepts and proxies the request
-  if (iframe.src !== url) {
-    iframe.src = url;
-  }
-}
-
+});
   // Display the target tab container
   const activeTab = document.getElementById(tabId);
   if (!activeTab) return;
