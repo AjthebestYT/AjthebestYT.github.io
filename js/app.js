@@ -62,30 +62,45 @@ function getProxiedUrl(targetUrl) {
 }
 
 // Function to handle tab switching and proxy loading
-function switchTab(tabId, targetUrl, btnElement) {
-  // Hide all tab containers
+function switchTab(tabId, url, btnElement) {
+  // Hide all tab content containers
   document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
     tab.style.display = 'none';
   });
 
-  // Reset tab button styling
+  // Reset tab button background styles
   document.querySelectorAll('#temp-email .tab-btn').forEach(btn => {
     btn.style.background = 'transparent';
     btn.style.color = '#ccc';
   });
 
-  // Display targeted tab
-  const activeTab = document.getElementById(tabId);
-  if (activeTab) {
-    activeTab.style.display = 'block';
-
-    // Load the proxy-encoded URL into the iframe if not already loaded
-    const iframe = activeTab.querySelector('iframe');
-    if (iframe && (!iframe.src || iframe.src === 'about:blank')) {
-      iframe.src = getProxiedUrl(targetUrl);
-    }
+  // Highlight active tab button
+  if (btnElement) {
+    btnElement.style.background = '#84cc16';
+    btnElement.style.color = '#000';
   }
 
+  // Display the target tab container
+  const activeTab = document.getElementById(tabId);
+  if (!activeTab) return;
+  activeTab.style.display = 'block';
+
+  const iframe = activeTab.querySelector('iframe');
+  if (!iframe) return;
+
+  // Assign the URL directly so Webfuse intercepts and proxies the request
+  if (iframe.src !== url) {
+    iframe.src = url;
+  }
+}
+
+// Automatically load the Raccoon game on initial page render
+document.addEventListener('DOMContentLoaded', () => {
+  const defaultBtn = document.querySelector('#temp-email .tab-btn');
+  if (defaultBtn) {
+    switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
+  }
+});
   // Highlight active button
   if (btnElement) {
     btnElement.style.background = '#84cc16';
