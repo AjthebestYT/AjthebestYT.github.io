@@ -92,12 +92,15 @@ function switchSection(name) {
   updateFocusableElements();
 }
 
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => switchSection(item.dataset.section));
-});
+// FIXED: Wrap event listeners in DOMContentLoaded to ensure DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => switchSection(item.dataset.section));
+  });
 
-document.querySelectorAll('.quick-card').forEach(card => {
-  card.addEventListener('click', () => switchSection(card.dataset.goto));
+  document.querySelectorAll('.quick-card').forEach(card => {
+    card.addEventListener('click', () => switchSection(card.dataset.goto));
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -538,4 +541,124 @@ function detectMouse() {
 }
 
 document.addEventListener('mousemove', detectMouse);
-document.addEventListener('mousedown', 
+document.addEventListener('mousedown', detectMouse);
+
+// --- Gamepad (Controller) detection ---
+let buttonStates = { a: false, b: false, x: false, y: false, lb: false, rb: false, back: false, start: false, lt: false, rt: false, 'left-stick-click': false, 'right-stick-click': false };
+let focusableElements = [];
+let focusIndex = -1;
+
+function detectGamepad() {
+  const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+  for (let i = 0; i < gamepads.length; i++) {
+    if (gamepads[i]) {
+      if (!gamepadConnected) {
+        gamepadConnected = true;
+        document.getElementById('controller-badge')?.classList.add('active');
+        updateFocusableElements();
+      }
+      handleGamepadInput(gamepads[i]);
+      return; // Process only first connected gamepad
+    }
+  }
+  if (gamepadConnected) {
+    gamepadConnected = false;
+    document.getElementById('controller-badge')?.classList.remove('active');
+    removeControllerFocus();
+  }
+}
+
+function handleGamepadInput(gamepad) {
+  // Buttons mapping: A=0, B=1, X=2, Y=3, LB=4, RB=5, Back=8, Start=9, Left Stick=10, Right Stick=11
+  const buttons = {
+    a: gamepad.buttons[0]?.pressed || false,
+    b: gamepad.buttons[1]?.pressed || false,
+    x: gamepad.buttons[2]?.pressed || false,
+    y: gamepad.buttons[3]?.pressed || false,
+    lb: gamepad.buttons[4]?.pressed || false,
+    rb: gamepad.buttons[5]?.pressed || false,
+    back: gamepad.buttons[8]?.pressed || false,
+    start: gamepad.buttons[9]?.pressed || false,
+    'left-stick-click': gamepad.buttons[10]?.pressed || false,
+    'right-stick-click': gamepad.buttons[11]?.pressed || false,
+  };
+
+  // Detect button presses (on state change from false to true)
+  if (buttons.a && !buttonStates.a) navigationController('select');
+  if (buttons.b && !buttonStates.b) navigationController('back');
+  if (buttons.up || (gamepad.axes[1] < -0.5)) navigationController('up');
+  if (buttons.down || (gamepad.axes[1] > 0.5)) navigationController('down');
+  if (buttons.left || (gamepad.axes[0] < -0.5)) navigationController('left');
+  if (buttons.right || (gamepad.axes[0] > 0.5)) navigationController('right');
+
+  // Update button states
+  buttonStates = buttons;
+}
+
+function navigationController(direction) {
+  if (focusableElements.length === 0) return;
+  if (focusIndex === -1) focusIndex = 0;
+
+  switch (direction) {
+    case 'select':
+      focusableElements[focusIndex]?.click?.();
+      break;
+    case 'back':
+      // Close modals if open
+      if (!document.getElementById('game-player-modal')?.classList.contains('hidden')) {
+        closeGamePlayer();
+      } else if (!document.getElementById('player-modal')?.classList.contains('hidden')) {
+        closePlayer();
+      }
+      break;
+    case 'up':
+    case 'left':
+      focusIndex = (focusIndex - 1 + focusableElements.length) % focusableElements.length;
+      updateControllerFocus();
+      break;
+    case 'down':
+    case 'right':
+      focusIndex = (focusIndex + 1) % focusableElements.length;
+      updateControllerFocus();
+      break;
+  }
+}
+
+function updateFocusableElements() {
+  const hiddenModal = document.getElementById('game-player-modal')?.classList.contains('hidden') !== false;
+  const closedPlayer = document.getElementById('player-modal')?.classList.contains('hidden') !== false;
+
+  if (!hiddenModal || !closedPlayer) {
+    focusableElements = [];
+    focusIndex = -1;
+    return;
+  }
+
+  focusableElements = [...document.querySelectorAll('.nav-item, .quick-card, button:not(.hidden *)')].filter(el => {
+    return el.offsetParent !== null;
+  });
+  focusIndex = -1;
+  removeControllerFocus();
+}
+
+function updateControllerFocus() {
+  removeControllerFocus();
+  if (focusableElements[focusIndex]) {
+    focusableElements[focusIndex].style.outline = '2px solid var(--accent)';
+    focusableElements[focusIndex].style.outlineOffset = '2px';
+  }
+}
+
+function removeControllerFocus() {
+  focusableElements.forEach(el => {
+    el.style.outline = '';
+    el.style.outlineOffset = '';
+  });
+}
+
+// Gamepad polling (check every 100ms since gamepads don't have reliable events)
+setInterval(detectGamepad, 100);
+
+// Initialize theme
+applyTheme(currentTheme);
+buildPalette();
