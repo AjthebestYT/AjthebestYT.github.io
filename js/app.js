@@ -331,6 +331,339 @@ async function searchContent(query) {
 function renderGrid(items, type) {
   const grid = document.getElementById('movies-grid');
   if (!items || items.length === 0) {
+// ═══════════════════════════════════════════════════════════════
+//  Navigation
+// ═══════════════════════════════════════════════════════════════
+
+const sections = ['home', 'cloud-gaming', 'games', 'movies', 'account', 'settings', 'temp-email'];
+
+const sectionTitles = {
+  'home': 'Home',
+  'cloud-gaming': 'Cloud Gaming',
+  'games': 'Games',
+  'movies': 'Movies',
+  'account': 'Account',
+  'settings': 'Settings',
+  'temp-email': 'Raccoon Game & Email'
+};
+
+// Dual-Environment Tab Switcher (Works Direct + In Proxy)
+function switchTab(tabId, rawUrl, btnElement) {
+  // Hide all tab content
+  document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
+    tab.style.display = 'none';
+  });
+
+  // Reset tab button styles
+  document.querySelectorAll('#temp-email .tab-btn').forEach(btn => {
+    btn.style.background = 'transparent';
+    btn.style.color = '#ccc';
+  });
+
+  // Highlight active button
+  if (btnElement) {
+    btnElement.style.background = '#84cc16';
+    btnElement.style.color = '#000';
+  }
+
+  // Show active tab container
+  const activeTab = document.getElementById(tabId);
+  if (!activeTab) return;
+  activeTab.style.display = 'block';
+
+  const iframe = activeTab.querySelector('iframe');
+  if (!iframe) return;
+
+  // Detect environment: Auto-switch between Direct GitHub Pages and Webfuse Proxy
+  let finalUrl = rawUrl;
+  if (window.location.host.includes('webfuse.com') && !rawUrl.includes('webfuse.com')) {
+    finalUrl = window.location.origin + '/proxy/' + rawUrl;
+  }
+
+  // Only assign if the URL changed to prevent flickering
+  if (iframe.src !== finalUrl) {
+    iframe.src = finalUrl;
+  }
+}
+
+let tempEmailInitialised = false;
+
+function switchSection(name) {
+  sections.forEach(s => {
+    document.getElementById(s)?.classList.toggle('active', s === name);
+  });
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.section === name);
+  });
+
+  const topbarTitle = document.getElementById('topbar-title');
+  if (topbarTitle) topbarTitle.textContent = sectionTitles[name] || name;
+
+  // Lazy-init sections
+  if (name === 'movies' && !moviesInitialised) initMovies();
+  if (name === 'games') renderGames();
+  if (name === 'temp-email' && !tempEmailInitialised) {
+    tempEmailInitialised = true;
+    const defaultBtn = document.querySelector('#temp-email .tab-btn');
+    if (defaultBtn) switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
+  }
+
+  // Reset scroll
+  document.getElementById('main-content')?.scrollTo(0, 0);
+
+  // Ignore parent controller navigation while a game/video is open in an iframe.
+  if (document.getElementById('game-player-modal')?.classList.contains('hidden') === false ||
+      document.getElementById('player-modal')?.classList.contains('hidden') === false ||
+      document.getElementById('cloud-gaming')?.classList.contains('active')) {
+    removeControllerFocus();
+    buttonStates.a = false;
+    buttonStates.b = false;
+    buttonStates.y = false;
+  }
+
+  // Update focusable list for controller
+  updateFocusableElements();
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => switchSection(item.dataset.section));
+});
+
+document.querySelectorAll('.quick-card').forEach(card => {
+  card.addEventListener('click', () => switchSection(card.dataset.goto));
+});
+
+// ═══════════════════════════════════════════════════════════════
+//  Theme System
+// ═══════════════════════════════════════════════════════════════
+
+const themes = {
+  lime:    { name: 'Lime',     desc: 'Default vibe',   accent: '#84cc16', accent2: '#a3e635', bg: '#0a0d0c', surface: '#121614', surface2: '#191f1c', tile: '#4d7c0f' },
+  blue:    { name: 'Ocean',    desc: 'Cool & calm',     accent: '#3b82f6', accent2: '#60a5fa', bg: '#0a0f1a', surface: '#111827', surface2: '#1e293b', tile: '#1d4ed8' },
+  purple:  { name: 'Violet',   desc: 'Classic',         accent: '#7c6af7', accent2: '#a78bfa', bg: '#0d0d0f', surface: '#16161a', surface2: '#1e1e24', tile: '#4c3aaf' },
+  red:     { name: 'Inferno',  desc: 'Bold & fiery',    accent: '#ef4444', accent2: '#f87171', bg: '#140a0a', surface: '#1e1111', surface2: '#2a1818', tile: '#b91c1c' },
+  orange:  { name: 'Sunset',   desc: 'Warm glow',       accent: '#f59e0b', accent2: '#fbbf24', bg: '#14100a', surface: '#1e1810', surface2: '#2a2014', tile: '#b45309' },
+  pink:    { name: 'Bubblegum', desc: 'Sweet & playful', accent: '#ec4899', accent2: '#f472b6', bg: '#140a10', surface: '#1e1018', surface2: '#2a1424', tile: '#be185d' },
+  cyan:    { name: 'Glacier',  desc: 'Ice cold',         accent: '#06b6d4', accent2: '#22d3ee', bg: '#0a1014', surface: '#0f1a1e', surface2: '#162a30', tile: '#0891b2' },
+  teal:    { name: 'Teal',     desc: 'Deep waters',      accent: '#14b8a6', accent2: '#2dd4bf', bg: '#0a1412', surface: '#0f1e1c', surface2: '#162826', tile: '#0f766e' },
+};
+
+let currentTheme = localStorage.getItem('theme') || 'lime';
+
+function applyTheme(key) {
+  const t = themes[key];
+  if (!t) return;
+  const root = document.documentElement.style;
+  root.setProperty('--accent', t.accent);
+  root.setProperty('--accent2', t.accent2);
+  root.setProperty('--bg', t.bg);
+  root.setProperty('--surface', t.surface);
+  root.setProperty('--surface2', t.surface2);
+  currentTheme = key;
+  localStorage.setItem('theme', key);
+  document.getElementById('preview-theme-name') &&
+    (document.getElementById('preview-theme-name').textContent = t.name);
+}
+
+function buildPalette() {
+  const palette = document.getElementById('color-palette');
+  if (!palette) return;
+  palette.innerHTML = Object.entries(themes).map(([key, t]) => `
+    <div class="color-tile ${key === currentTheme ? 'active' : ''}" data-theme="${key}"
+         style="background: linear-gradient(135deg, ${t.tile}, ${t.tile}cc);">
+      <div class="color-tile-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="color-tile-swatch" style="background: linear-gradient(135deg, ${t.accent}, ${t.accent2});"></div>
+      <div class="color-tile-name">${t.name}</div>
+      <div class="color-tile-desc">${t.desc}</div>
+    </div>
+  `).join('');
+
+  palette.querySelectorAll('.color-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      palette.querySelectorAll('.color-tile').forEach(t => t.classList.remove('active'));
+      tile.classList.add('active');
+      applyTheme(tile.dataset.theme);
+      if (document.getElementById('home').classList.contains('active')) initParticles();
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HTML5 Games
+// ═══════════════════════════════════════════════════════════════
+
+// Add games directly in the page HTML:
+// 1. Duplicate the .game-card block in index.html
+// 2. Change data-game-file, data-game-title, and the text inside
+// 3. No JavaScript array or render function is needed
+
+function filterGames(query = '') {
+  const grid = document.getElementById('games-grid');
+  if (!grid) return;
+
+  const cards = [...grid.querySelectorAll('.game-card')];
+  const term = query.trim().toLowerCase();
+  let visibleCount = 0;
+
+  cards.forEach(card => {
+    const title = (card.dataset.name || card.querySelector('.game-card-name')?.textContent || '').toLowerCase();
+    const match = !term || title.includes(term);
+    card.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+
+  const statEl = document.getElementById('stat-games-count');
+  if (statEl) statEl.textContent = visibleCount;
+}
+
+function renderGames() {
+  const grid = document.getElementById('games-grid');
+  if (!grid) return;
+
+  const cards = [...grid.querySelectorAll('.game-card')];
+  const statEl = document.getElementById('stat-games-count');
+  if (statEl) statEl.textContent = cards.length;
+
+  cards.forEach(card => {
+    if (card.dataset.bound === 'true') return;
+    card.dataset.bound = 'true';
+
+    const url = card.dataset.gameFile || card.dataset.url;
+    const title = card.dataset.gameTitle || card.dataset.name || card.querySelector('.game-card-name')?.textContent?.trim() || 'Game';
+
+    card.addEventListener('click', () => openGame(url, title));
+  });
+
+  const gamesSearch = document.getElementById('games-search');
+  if (gamesSearch && !gamesSearch.dataset.bound) {
+    gamesSearch.dataset.bound = 'true';
+    gamesSearch.addEventListener('input', (e) => filterGames(e.target.value));
+  }
+
+  filterGames(gamesSearch?.value || '');
+  updateFocusableElements();
+}
+
+function openGame(file, title) {
+  removeControllerFocus();
+  document.getElementById('game-player-title').textContent = title;
+  document.getElementById('game-player-frame').src = file;
+  document.getElementById('game-player-modal').classList.remove('hidden');
+  buttonStates.a = false;
+  buttonStates.b = false;
+  buttonStates.y = false;
+}
+
+function closeGamePlayer() {
+  document.getElementById('game-player-modal').classList.add('hidden');
+  document.getElementById('game-player-frame').src = '';
+  buttonStates.a = false;
+  buttonStates.b = false;
+  buttonStates.y = false;
+  updateFocusableElements();
+  exitFullscreenIfActive();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Fullscreen helper (used by game player, cloud gaming, movie player)
+// ═══════════════════════════════════════════════════════════════
+
+function toggleFullscreen(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  if (!isFullscreen) {
+    (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen)?.call(el);
+  } else {
+    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
+  }
+}
+
+function exitFullscreenIfActive() {
+  if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+    (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Movies (TMDB integration — kept from original)
+// ═══════════════════════════════════════════════════════════════
+
+const TMDB_KEY  = atob('NzAzMWE0MDgzMThlYTFiNjlhOGIzMGE4MjNmOWRkNTc=');
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const TMDB_IMG  = 'https://image.tmdb.org/t/p/w342';
+const TOUSTREAM = 'https://toustream-mtv.movietrunk.com/tou';
+
+let moviesInitialised = false;
+let currentMovieTab   = 'movies';
+let searchTimer       = null;
+let currentShowId     = null;
+
+function initMovies() {
+  moviesInitialised = true;
+  fetchMovies();
+}
+
+function switchMovieTab(tab) {
+  currentMovieTab = tab;
+  document.getElementById('tab-movies').classList.toggle('active', tab === 'movies');
+  document.getElementById('tab-shows').classList.toggle('active', tab === 'shows');
+  document.getElementById('movies-search').value = '';
+  fetchMovies();
+}
+
+function handleMovieSearch(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    val.trim() ? searchContent(val.trim()) : fetchMovies();
+  }, 400);
+}
+
+async function fetchJsonWithTimeout(url, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, { signal: controller.signal, cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchMovies() {
+  showMoviesLoading();
+  try {
+    const endpoint = currentMovieTab === 'movies'
+      ? `${TMDB_BASE}/movie/popular?api_key=${TMDB_KEY}&language=en-US&page=1`
+      : `${TMDB_BASE}/tv/popular?api_key=${TMDB_KEY}&language=en-US&page=1`;
+    const data = await fetchJsonWithTimeout(endpoint);
+    renderGrid(data.results, currentMovieTab);
+  } catch {
+    showMoviesError();
+  }
+}
+
+async function searchContent(query) {
+  showMoviesLoading();
+  try {
+    const type = currentMovieTab === 'movies' ? 'movie' : 'tv';
+    const endpoint = `${TMDB_BASE}/search/${type}?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&page=1`;
+    const data = await fetchJsonWithTimeout(endpoint);
+    renderGrid(data.results, currentMovieTab);
+  } catch {
+    showMoviesError();
+  }
+}
+
+function renderGrid(items, type) {
+  const grid = document.getElementById('movies-grid');
+  if (!items || items.length === 0) {
     grid.innerHTML = `<div class="movies-loading"><span>No results found.</span></div>`;
     return;
   }
@@ -428,7 +761,7 @@ function closePlayer() {
   exitFullscreenIfActive();
 }
 
-// ═══════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════
 //  Particle Background (Home)
 // ═══════════════════════════════════════════════════════════════
 
