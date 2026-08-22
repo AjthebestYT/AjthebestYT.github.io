@@ -538,5 +538,168 @@ function detectMouse() {
 }
 
 document.addEventListener('mousemove', detectMouse);
-document.addEventListener('mousedown', # from the project root
-cp path/to/app.js  js/app.js
+document.addEventListener('mousedown', detectMouse);
+
+// --- Controller / Gamepad support ---
+const buttonStates = { a: false, b: false, y: false, x: false, lb: false, rb: false };
+let focusableElements = [];
+let focusedIndex = -1;
+let lastStickMove = 0;
+const STICK_COOLDOWN = 180;
+
+function updateFocusableElements() {
+  const activeSection = document.querySelector('.section.active');
+  const candidates = [];
+
+  document.querySelectorAll('.nav-item').forEach(el => candidates.push(el));
+
+  if (activeSection) {
+    activeSection.querySelectorAll(
+      '.quick-card, .game-card, .movie-card, .movies-tab, .account-tab, .account-btn, .player-btn, button, [data-goto], [data-section]'
+    ).forEach(el => {
+      if (candidates.includes(el)) return;
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
+      candidates.push(el);
+    });
+  }
+
+  focusableElements = candidates.filter(el => el && el.offsetParent !== null);
+  if (focusedIndex >= focusableElements.length) {
+    removeControllerFocus();
+  }
+}
+
+function removeControllerFocus() {
+  document.querySelectorAll('.focused-by-controller').forEach(el => {
+    el.classList.remove('focused-by-controller');
+  });
+  focusedIndex = -1;
+}
+
+function setControllerFocus(index) {
+  if (!focusableElements.length) return;
+  removeControllerFocus();
+  focusedIndex = ((index % focusableElements.length) + focusableElements.length) % focusableElements.length;
+  const el = focusableElements[focusedIndex];
+  if (el) {
+    el.classList.add('focused-by-controller');
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+function activateFocused() {
+  if (focusedIndex < 0 || !focusableElements[focusedIndex]) return;
+  focusableElements[focusedIndex].click();
+}
+
+function showControllerToast(msg) {
+  const toast = document.getElementById('input-toast');
+  if (!toast) return;
+  const textEl = toast.querySelector('.toast-text');
+  if (textEl) textEl.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(showControllerToast._timer);
+  showControllerToast._timer = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+function onGamepadConnected() {
+  gamepadConnected = true;
+  document.getElementById('controller-badge')?.classList.add('active');
+  showControllerToast('Controller connected');
+  updateFocusableElements();
+  if (focusedIndex < 0 && focusableElements.length) setControllerFocus(0);
+}
+
+function onGamepadDisconnected() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  const any = Array.from(pads).some(p => p);
+  if (!any) {
+    gamepadConnected = false;
+    document.getElementById('controller-badge')?.classList.remove('active');
+    removeControllerFocus();
+    showControllerToast('Controller disconnected');
+  }
+}
+
+window.addEventListener('gamepadconnected', onGamepadConnected);
+window.addEventListener('gamepaddisconnected', onGamepadDisconnected);
+
+function pollGamepads() {
+  if (!navigator.getGamepads) {
+    requestAnimationFrame(pollGamepads);
+    return;
+  }
+
+  const pads = navigator.getGamepads();
+  let activePad = null;
+  for (let i = 0; i < pads.length; i++) {
+    if (pads[i]) { activePad = pads[i]; break; }
+  }
+
+  if (!activePad) {
+    if (gamepadConnected) {
+      gamepadConnected = false;
+      document.getElementById('controller-badge')?.classList.remove('active');
+      removeControllerFocus();
+    }
+    requestAnimationFrame(pollGamepads);
+    return;
+  }
+
+  if (!gamepadConnected) onGamepadConnected();
+
+  const buttons = activePad.buttons;
+  const axes = activePad.axes;
+  const pressed = (i) => buttons[i] && (buttons[i].pressed || buttons[i].value > 0.5);
+  const now = performance.now();
+
+  if (pressed(12) || (axes[1] < -0.55)) {
+    if (now - lastStickMove > STICK_COOLDOWN) {
+      setControllerFocus(focusedIndex <= 0 ? focusableElements.length - 1 : focusedIndex - 1);
+      lastStickMove = now;
+    }
+  } else if (pressed(13) || (axes[1] > 0.55)) {
+    if (now - lastStickMove > STICK_COOLDOWN) {
+      setControllerFocus(focusedIndex + 1);
+      lastStickMove = now;
+    }
+  } else if (pressed(14) || (axes[0] < -0.55)) {
+    if (now - lastStickMove > STICK_COOLDOWN) {
+      setControllerFocus(focusedIndex <= 0 ? focusableElements.length - 1 : focusedIndex - 1);
+      lastStickMove = now;
+    }
+  } else if (pressed(15) || (axes[0] > 0.55)) {
+    if (now - lastStickMove > STICK_COOLDOWN) {
+      setControllerFocus(focusedIndex + 1);
+      lastStickMove = now;
+    }
+  }
+
+  const aNow = pressed(0);
+  const bNow = pressed(1);
+  const yNow = pressed(3);
+
+  if (aNow && !buttonStates.a) activateFocused();
+  if (bNow && !buttonStates.b) {
+    if (!document.getElementById('game-player-modal')?.classList.contains('hidden')) {
+      closeGamePlayer();
+    } else if (!document.getElementById('player-modal')?.classList.contains('hidden')) {
+      if (typeof closePlayer === 'function') closePlayer();
+    }
+  }
+
+  buttonStates.a = aNow;
+  buttonStates.b = bNow;
+  buttonStates.y = yNow;
+
+  requestAnimationFrame(pollGamepads);
+}
+
+requestAnimationFrame(pollGamepads);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateFocusableElements);
+} else {
+  updateFocusableElements();
+    }
