@@ -538,4 +538,5 @@ function detectMouse() {
 }
 
 document.addEventListener('mousemove', detectMouse);
-document.addEventListener('mousedown', 
+document.addEventListener('mousedown', # from the project root
+cp path/to/app.js  js/app.js
