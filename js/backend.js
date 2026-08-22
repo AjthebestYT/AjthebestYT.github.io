@@ -18,7 +18,7 @@ function simpleHash(str) {
 }
 
 // The actual password check - the password string is never stored in plain text
-const SITE_PASSWORD_HASH = '68af2085';
+const SITE_PASSWORD_HASH = '44b5dc57';
 const SITE_PASSWORD_CHECK = SITE_PASSWORD_HASH;
 
 // ── Storage Keys ──
