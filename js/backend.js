@@ -659,39 +659,4 @@ function buildChatBgOptions() {
 
 // ═══════════════════════════════════════════════════════════════
 //  Boot
-// ═══════════════════════════════════════════════════════════════
-
-function initChatIfReady() {
-  // Restore session
-  const session = getSession();
-  if (session) {
-    const accounts = getAccounts();
-    if (accounts[session.username]) {
-      const acc = accounts[session.username];
-      currentUser = {
-        username: session.username,
-        displayName: acc.displayName,
-        pfp: acc.pfp || ''
-      };
-      renderAccountView();
-      connectToNetwork();
-    }
-  }
-
-  initChat();
-  buildChatColorOptions();
-  buildChatBgOptions();
-  renderAccountView();
-}
-
-// Password gate on load
-document.addEventListener('DOMContentLoaded', () => {
-  const unlocked = localStorage.getItem(UNLOCK_KEY);
-  if (unlocked === '1') {
-    document.getElementById('password-gate').classList.add('hidden');
-    initChatIfReady();
-  } else {
-    document.body.style.overflow = 'hidden';
-    document.getElementById('site-password-input').focus();
-  }
-});
+// ══════════════════════════════════════════════════════════════
