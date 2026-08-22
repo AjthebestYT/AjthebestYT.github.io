@@ -2,8 +2,6 @@
 //  Navigation
 // ═══════════════════════════════════════════════════════════════
 
-const sections = ['home', 'cloud-gaming', 'games', 'movies', 'chat', 'account', 'settings', 'temp-email'];
-
 const sections = ['home', 'cloud-gaming', 'games', 'movies', 'account', 'settings', 'temp-email'];
 
 const sectionTitles = {
@@ -15,7 +13,8 @@ const sectionTitles = {
   'settings': 'Settings',
   'temp-email': 'Raccoon Game & Email'
 };
-// 1. Dual-Environment Tab Switcher (Works Direct + In Proxy)
+
+// Dual-Environment Tab Switcher (Works Direct + In Proxy)
 function switchTab(tabId, rawUrl, btnElement) {
   // Hide all tab content
   document.querySelectorAll('#temp-email .tab-content').forEach(tab => {
@@ -54,85 +53,8 @@ function switchTab(tabId, rawUrl, btnElement) {
   }
 }
 
-// 2. Global Sidebar Navigation (Works Everywhere)
-document.addEventListener('DOMContentLoaded', () => {
-  const navItems = document.querySelectorAll('.nav-item');
-  const sections = document.querySelectorAll('.section');
+let tempEmailInitialised = false;
 
-  navItems.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // Support both data-section and legacy click targets
-      const targetSection = item.getAttribute('data-section');
-      if (!targetSection) return;
-
-      // Update sidebar active highlights
-      navItems.forEach(nav => nav.classList.remove('active'));
-      item.classList.add('active');
-
-      // Hide all main section divs
-      sections.forEach(sec => {
-        sec.style.display = 'none';
-        sec.classList.remove('active');
-      });
-
-      // Display the selected section
-      const activeEl = document.getElementById(targetSection);
-      if (activeEl) {
-        activeEl.style.display = 'block';
-        activeEl.classList.add('active');
-
-        // If user clicks "Raccoon Game & Email", auto-load default tab
-        if (targetSection === 'temp-email') {
-          const defaultBtn = activeEl.querySelector('.tab-btn');
-          if (defaultBtn) {
-            switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
-          }
-        }
-      }
-    });
-  });
-});
-  // Display the target tab container
-  const activeTab = document.getElementById(tabId);
-  if (!activeTab) return;
-  activeTab.style.display = 'block';
-
-  const iframe = activeTab.querySelector('iframe');
-  if (!iframe) return;
-
-  // Assign the URL directly so Webfuse intercepts and proxies the request
-  if (iframe.src !== url) {
-    iframe.src = url;
-  }
-}
-
-// Automatically load the Raccoon game on initial page render
-document.addEventListener('DOMContentLoaded', () => {
-  const defaultBtn = document.querySelector('#temp-email .tab-btn');
-  if (defaultBtn) {
-    switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
-  }
-});
-  // Highlight active button
-  if (btnElement) {
-    btnElement.style.background = '#84cc16';
-    btnElement.style.color = '#000';
-  }
-}
-
-// Automatically load default Raccoon tab on initial setup
-document.addEventListener('DOMContentLoaded', () => {
-  const raccoonBtn = document.querySelector('#temp-email .tab-btn');
-  if (raccoonBtn) {
-    switchTab('tab-raccoon', 'https://raccoongame.com/', raccoonBtn);
-  }
-});
-// Automatically load default tab when the main section opens
-document.addEventListener('DOMContentLoaded', () => {
-  loadProxyBlob('tab-raccoon');
-});
 function switchSection(name) {
   sections.forEach(s => {
     document.getElementById(s)?.classList.toggle('active', s === name);
@@ -147,6 +69,11 @@ function switchSection(name) {
   // Lazy-init sections
   if (name === 'movies' && !moviesInitialised) initMovies();
   if (name === 'games') renderGames();
+  if (name === 'temp-email' && !tempEmailInitialised) {
+    tempEmailInitialised = true;
+    const defaultBtn = document.querySelector('#temp-email .tab-btn');
+    if (defaultBtn) switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
+  }
 
   // Reset scroll
   document.getElementById('main-content')?.scrollTo(0, 0);
@@ -611,254 +538,4 @@ function detectMouse() {
 }
 
 document.addEventListener('mousemove', detectMouse);
-document.addEventListener('mousedown', detectMouse);
-
-// --- Gamepad detection ---
-window.addEventListener('gamepadconnected', (e) => {
-  gamepadConnected = true;
-  document.getElementById('controller-badge')?.classList.add('active');
-  showToast(`Controller connected: ${e.gamepad.id.substring(0, 30)}`);
-  if (!gamepadPolling) startGamepadPolling();
-});
-
-window.addEventListener('gamepaddisconnected', (e) => {
-  gamepadConnected = false;
-  document.getElementById('controller-badge')?.classList.remove('active');
-  showToast(`Controller disconnected`);
-  removeControllerFocus();
-});
-
-// --- Toast notification ---
-let toastTimer = null;
-function showToast(msg) {
-  const toast = document.getElementById('input-toast');
-  if (!toast) return;
-  toast.querySelector('.toast-text').textContent = msg;
-  toast.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
-}
-
-// --- Controller navigation ---
-let gamepadPolling = false;
-let focusableElements = [];
-let currentFocusIndex = -1;
-let lastNavTime = 0;
-const NAV_DELAY = 150; // ms between navigation moves
-
-function updateFocusableElements() {
-  // Get all focusable interactive elements in the active section (+ sidebar nav)
-  const activeSection = document.querySelector('.section.active');
-  const scopes = [document.querySelector('.sidebar'), activeSection].filter(Boolean);
-
-  focusableElements = [];
-  scopes.forEach(scope => {
-    focusableElements.push(...Array.from(scope.querySelectorAll(
-      '.nav-item, .quick-card, .game-card, .movie-card, .movies-tab, .color-tile, .icon-btn, .text-btn, button, [role="button"], input, select'
-    )).filter(el => el.offsetParent !== null));
-  });
-}
-
-function setControllerFocus(index) {
-  removeControllerFocus();
-  currentFocusIndex = index;
-  if (index >= 0 && index < focusableElements.length) {
-    const el = focusableElements[index];
-    el.classList.add('focused-by-controller');
-    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
-}
-
-function removeControllerFocus() {
-  document.querySelectorAll('.focused-by-controller').forEach(el => el.classList.remove('focused-by-controller'));
-}
-
-function navigateFocus(direction) {
-  if (focusableElements.length === 0) return;
-
-  if (currentFocusIndex === -1) {
-    setControllerFocus(0);
-    return;
-  }
-
-  let newIndex = currentFocusIndex;
-  if (direction === 'up') newIndex = Math.max(0, currentFocusIndex - 1);
-  else if (direction === 'down') newIndex = Math.min(focusableElements.length - 1, currentFocusIndex + 1);
-  else if (direction === 'left') newIndex = Math.max(0, currentFocusIndex - 1);
-  else if (direction === 'right') newIndex = Math.min(focusableElements.length - 1, currentFocusIndex + 1);
-
-  if (newIndex !== currentFocusIndex) {
-    setControllerFocus(newIndex);
-  }
-}
-
-function activateFocused() {
-  if (currentFocusIndex >= 0 && currentFocusIndex < focusableElements.length) {
-    const el = focusableElements[currentFocusIndex];
-    el.click();
-  }
-}
-
-function goBack() {
-  // Close any open modals first, otherwise go home
-  if (!document.getElementById('player-modal').classList.contains('hidden')) {
-    closePlayer();
-    return;
-  }
-  if (!document.getElementById('game-player-modal').classList.contains('hidden')) {
-    closeGamePlayer();
-    return;
-  }
-  switchSection('home');
-}
-
-// Button state tracking (debounce)
-const buttonStates = {};
-
-function isEmbeddedPlayerActive() {
-  const gameModal = document.getElementById('game-player-modal');
-  const movieModal = document.getElementById('player-modal');
-  const cloudGaming = document.getElementById('cloud-gaming');
-
-  return (gameModal && !gameModal.classList.contains('hidden')) ||
-         (movieModal && !movieModal.classList.contains('hidden')) ||
-         !!(cloudGaming && cloudGaming.classList.contains('active'));
-}
-
-function startGamepadPolling() {
-  gamepadPolling = true;
-
-  function poll() {
-    const gamepads = navigator.getGamepads();
-    let gp = null;
-    for (const pad of gamepads) {
-      if (pad) { gp = pad; break; }
-    }
-
-    if (isEmbeddedPlayerActive()) {
-      buttonStates.a = false;
-      buttonStates.b = false;
-      buttonStates.y = false;
-      requestAnimationFrame(poll);
-      return;
-    }
-
-    if (gp) {
-      const now = performance.now();
-
-      // D-pad (buttons 12=up, 13=down, 14=left, 15=right)
-      const dpadUp    = gp.buttons[12]?.pressed || false;
-      const dpadDown  = gp.buttons[13]?.pressed || false;
-      const dpadLeft  = gp.buttons[14]?.pressed || false;
-      const dpadRight = gp.buttons[15]?.pressed || false;
-
-      // Left stick (axes 0 = horizontal, 1 = vertical)
-      const stickX = gp.axes[0] || 0;
-      const stickY = gp.axes[1] || 0;
-      const stickDeadzone = 0.5;
-
-      const stickUp    = stickY < -stickDeadzone;
-      const stickDown  = stickY > stickDeadzone;
-      const stickLeft  = stickX < -stickDeadzone;
-      const stickRight = stickX > stickDeadzone;
-
-      // A button (0) = activate/click
-      const aButton = gp.buttons[0]?.pressed || false;
-      // B button (1) = go back
-      const bButton = gp.buttons[1]?.pressed || false;
-      // Y button (3) = toggle fullscreen on whichever player is open
-      const yButton = gp.buttons[3]?.pressed || false;
-
-      // Navigation with debounce
-      if (now - lastNavTime > NAV_DELAY) {
-        if (dpadUp || stickUp) {
-          navigateFocus('up');
-          lastNavTime = now;
-        } else if (dpadDown || stickDown) {
-          navigateFocus('down');
-          lastNavTime = now;
-        } else if (dpadLeft || stickLeft) {
-          navigateFocus('left');
-          lastNavTime = now;
-        } else if (dpadRight || stickRight) {
-          navigateFocus('right');
-          lastNavTime = now;
-        }
-      }
-
-      // A button — edge detect (press, not hold)
-      if (aButton && !buttonStates.a) {
-        buttonStates.a = true;
-        activateFocused();
-      } else if (!aButton) {
-        buttonStates.a = false;
-      }
-
-      // B button — edge detect
-      if (bButton && !buttonStates.b) {
-        buttonStates.b = true;
-        goBack();
-      } else if (!bButton) {
-        buttonStates.b = false;
-      }
-
-      // Y button — edge detect, toggle fullscreen for open player
-      if (yButton && !buttonStates.y) {
-        buttonStates.y = true;
-        if (!document.getElementById('game-player-modal').classList.contains('hidden')) {
-          toggleFullscreen('game-player-box');
-        } else if (!document.getElementById('player-modal').classList.contains('hidden')) {
-          toggleFullscreen('movie-player-box');
-        } else if (document.getElementById('cloud-gaming').classList.contains('active')) {
-          toggleFullscreen('cloud-gaming');
-        }
-      } else if (!yButton) {
-        buttonStates.y = false;
-      }
-    }
-
-    requestAnimationFrame(poll);
-  }
-
-  poll();
-}
-
-// Also check for already-connected gamepads (Firefox requires manual check)
-window.addEventListener('load', () => {
-  const gamepads = navigator.getGamepads();
-  for (const pad of gamepads) {
-    if (pad) {
-      gamepadConnected = true;
-      document.getElementById('controller-badge')?.classList.add('active');
-      showToast(`Controller connected: ${pad.id.substring(0, 30)}`);
-      startGamepadPolling();
-      break;
-    }
-  }
-});
-
-// Keyboard Escape to close modals / exit fullscreen
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closePlayer();
-    closeGamePlayer();
-  }
-  // F key toggles fullscreen for whichever player is open
-  if (e.key === 'f' || e.key === 'F') {
-    if (!document.getElementById('game-player-modal').classList.contains('hidden')) {
-      toggleFullscreen('game-player-box');
-    } else if (!document.getElementById('player-modal').classList.contains('hidden')) {
-      toggleFullscreen('movie-player-box');
-    }
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════
-//  Boot
-// ═══════════════════════════════════════════════════════════════
-
-buildPalette();
-applyTheme(currentTheme);
-initParticles();
-detectMouse(); // assume mouse is present on load
-renderGames();
+document.addEventListener('mousedown', 
