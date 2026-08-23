@@ -69,11 +69,6 @@ function switchSection(name) {
   // Lazy-init sections
   if (name === 'movies' && !moviesInitialised) initMovies();
   if (name === 'games') renderGames();
-  if (name === 'temp-email' && !tempEmailInitialised) {
-    tempEmailInitialised = true;
-    const defaultBtn = document.querySelector('#temp-email .tab-btn');
-    if (defaultBtn) switchTab('tab-raccoon', 'https://raccoongame.com/', defaultBtn);
-  }
 
   // Reset scroll
   document.getElementById('main-content')?.scrollTo(0, 0);
@@ -186,8 +181,16 @@ function filterGames(query = '') {
     if (match) visibleCount++;
   });
 
+  updateGameCount();
+}
+
+function updateGameCount() {
+  const grid = document.getElementById('games-grid');
   const statEl = document.getElementById('stat-games-count');
-  if (statEl) statEl.textContent = visibleCount;
+  if (!grid || !statEl) return;
+  const cards = [...grid.querySelectorAll('.game-card')];
+  const visible = cards.filter(c => c.style.display !== 'none');
+  statEl.textContent = visible.length || cards.length;
 }
 
 function renderGames() {
@@ -195,8 +198,7 @@ function renderGames() {
   if (!grid) return;
 
   const cards = [...grid.querySelectorAll('.game-card')];
-  const statEl = document.getElementById('stat-games-count');
-  if (statEl) statEl.textContent = cards.length;
+  updateGameCount();
 
   cards.forEach(card => {
     if (card.dataset.bound === 'true') return;
@@ -266,7 +268,8 @@ function exitFullscreenIfActive() {
 const TMDB_KEY  = atob('NzAzMWE0MDgzMThlYTFiNjlhOGIzMGE4MjNmOWRkNTc=');
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w342';
-const TOUSTREAM = 'https://toustream-mtv.movietrunk.com/tou';
+const TOUSTREAM = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fmappl.tv/watch/movie/';
+const TOUSTREAM_TV = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fmappl.tv/embed/movie/tou';
 
 let moviesInitialised = false;
 let currentMovieTab   = 'movies';
@@ -385,7 +388,7 @@ async function openContent(id, type, title) {
   const epSel = document.getElementById('episode-selector');
   if (type === 'movies') {
     epSel.classList.add('hidden');
-    document.getElementById('player-frame').src = `${TOUSTREAM}/movies/${id}`;
+    document.getElementById('player-frame').src = `${TOUSTREAM}${id}`;
   } else {
     currentShowId = id;
     epSel.classList.remove('hidden');
@@ -422,7 +425,7 @@ function playEpisode() {
   const season  = document.getElementById('season-select').value;
   const episode = document.getElementById('episode-select').value;
   document.getElementById('player-frame').src =
-    `${TOUSTREAM}/tv/${currentShowId}/${season}/${episode}`;
+    `${TOUSTREAM_TV}/tv/${currentShowId}/${season}/${episode}`;
 }
 
 function closePlayer() {
@@ -432,12 +435,17 @@ function closePlayer() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  Particle Background (Home)
+//  Cosmic Background (Home) — Aurora orbs, twinkling stars,
+//  constellation net, and shooting stars
 // ═══════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('particles-canvas');
 const ctx    = canvas ? canvas.getContext('2d') : null;
 let pts = [];
+let stars = [];
+let orbs = [];
+let meteor = null;
+let meteorTimer = 300;
 let animFrame;
 
 function hexToRgb(hex) {
@@ -457,43 +465,92 @@ function initParticles() {
   if (!canvas || !ctx) return;
   cancelAnimationFrame(animFrame);
   resizeCanvas();
-  const count = Math.floor((canvas.width * canvas.height) / 12000);
-  pts = [];
-  for (let i = 0; i < count; i++) {
-    pts.push({
-      x:     Math.random() * canvas.width,
-      y:     Math.random() * canvas.height,
-      r:     Math.random() * 1.6 + 0.3,
-      dx:    (Math.random() - 0.5) * 0.28,
-      dy:    (Math.random() - 0.5) * 0.28,
-      alpha: Math.random() * 0.45 + 0.1,
+
+  const w = canvas.width, h = canvas.height;
+  const area = w * h;
+
+  // Distant twinkling star field
+  stars = [];
+  const starCount = Math.floor(area / 18000);
+  for (let i = 0; i < starCount; i++) {
+    stars.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: Math.random() * 1.1 + 0.2,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.008 + Math.random() * 0.02,
     });
   }
+
+  // Brighter constellation nodes (connecting web)
+  pts = [];
+  const count = Math.floor(area / 14000);
+  for (let i = 0; i < count; i++) {
+    pts.push({
+      x:     Math.random() * w,
+      y:     Math.random() * h,
+      r:     Math.random() * 1.8 + 0.4,
+      dx:    (Math.random() - 0.5) * 0.32,
+      dy:    (Math.random() - 0.5) * 0.32,
+      alpha: Math.random() * 0.5 + 0.15,
+      pulse: Math.random() * Math.PI * 2,
+      pulseSpeed: 0.02 + Math.random() * 0.04,
+    });
+  }
+
+  // Slow-flowing aurora gradient blobs (theme tinted)
+  orbs = [
+    { x: w * 0.22, y: h * 0.18, r: Math.max(w, h) * 0.52, vx: 0.18, vy: 0.09, alpha: 0.13 },
+    { x: w * 0.80, y: h * 0.30, r: Math.max(w, h) * 0.44, vx: -0.14, vy: 0.07, alpha: 0.10 },
+    { x: w * 0.50, y: h * 0.95, r: Math.max(w, h) * 0.58, vx: 0.10, vy: -0.08, alpha: 0.09 },
+  ];
+
   draw();
 }
 
 function draw() {
   if (!canvas || !ctx) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const accent  = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
-  const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim();
+
+  const accent  = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#84cc16';
+  const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim() || '#a3e635';
   const rgb  = hexToRgb(accent);
   const rgb2 = hexToRgb(accent2);
+  const t = performance.now() / 1000;
 
-  const g = ctx.createRadialGradient(canvas.width*0.25, canvas.height*0.2, 0, canvas.width*0.25, canvas.height*0.2, canvas.width*0.65);
-  g.addColorStop(0,   `rgba(${rgb},0.08)`);
-  g.addColorStop(0.6, `rgba(${rgb},0.02)`);
-  g.addColorStop(1,   'rgba(0,0,0,0)');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // ── Aurora gradient orbs ──
+  orbs.forEach(o => {
+    o.x += o.vx; o.y += o.vy;
+    if (o.x < -o.r) o.x = canvas.width + o.r;
+    if (o.x > canvas.width + o.r) o.x = -o.r;
+    if (o.y < -o.r) o.y = canvas.height + o.r;
+    if (o.y > canvas.height + o.r) o.y = -o.r;
 
+    const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r);
+    g.addColorStop(0,   `rgba(${rgb},${o.alpha})`);
+    g.addColorStop(0.5, `rgba(${rgb2},${o.alpha * 0.45})`);
+    g.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  });
+
+  // ── Twinkling star field ──
+  stars.forEach(s => {
+    const a = 0.25 + 0.6 * (0.5 + 0.5 * Math.sin(t * s.speed * 4 + s.phase));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fill();
+  });
+
+  // ── Constellation connections ──
   for (let i = 0; i < pts.length; i++) {
     for (let j = i + 1; j < pts.length; j++) {
       const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
       const d  = Math.sqrt(dx*dx + dy*dy);
-      if (d < 110) {
+      if (d < 120) {
         ctx.beginPath();
-        ctx.strokeStyle = `rgba(${rgb},${0.09*(1-d/110)})`;
+        ctx.strokeStyle = `rgba(${rgb},${0.10*(1-d/120)})`;
         ctx.lineWidth = 0.5;
         ctx.moveTo(pts[i].x, pts[i].y);
         ctx.lineTo(pts[j].x, pts[j].y);
@@ -502,15 +559,62 @@ function draw() {
     }
   }
 
+  // ── Pulsing glow nodes ──
   pts.forEach(p => {
+    p.pulse += p.pulseSpeed;
+    const glow = 0.5 + 0.5 * Math.sin(p.pulse);
+    const size = p.r * (1 + glow * 0.6);
+
+    // Soft halo
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.arc(p.x, p.y, size * 3.2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${rgb},${p.alpha * 0.12 * glow})`;
+    ctx.fill();
+
+    // Core
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(${rgb2},${p.alpha})`;
     ctx.fill();
+
     p.x += p.dx; p.y += p.dy;
     if (p.x < 0 || p.x > canvas.width)  p.dx *= -1;
     if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
   });
+
+  // ── Shooting star (rare flair) ──
+  meteorTimer--;
+  if (!meteor && meteorTimer <= 0) {
+    meteor = {
+      x: Math.random() * canvas.width * 0.6 + canvas.width * 0.2,
+      y: Math.random() * canvas.height * 0.3,
+      vx: -(3 + Math.random() * 3),
+      vy: 1.2 + Math.random() * 1.4,
+      life: 1,
+    };
+    meteorTimer = 350 + Math.random() * 500;
+  }
+  if (meteor) {
+    meteor.x += meteor.vx;
+    meteor.y += meteor.vy;
+    meteor.life -= 0.018;
+
+    const tail = 8;
+    var grad = ctx.createLinearGradient(
+      meteor.x, meteor.y,
+      meteor.x - meteor.vx * tail, meteor.y - meteor.vy * tail
+    );
+    grad.addColorStop(0, `rgba(255,255,255,${0.9 * meteor.life})`);
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(meteor.x, meteor.y);
+    ctx.lineTo(meteor.x - meteor.vx * tail, meteor.y - meteor.vy * tail);
+    ctx.stroke();
+
+    if (meteor.life <= 0) meteor = null;
+  }
 
   animFrame = requestAnimationFrame(draw);
 }
@@ -661,4 +765,6 @@ setInterval(detectGamepad, 100);
 
 // Initialize theme
 applyTheme(currentTheme);
-buildPalette();
+initParticles();
+detectMouse(); // assume mouse is present on load
+renderGames();

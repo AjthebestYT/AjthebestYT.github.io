@@ -42,13 +42,44 @@ let myChatBg = '#121614';
 //  Site Password Gate
 // ═══════════════════════════════════════════════════════════════
 
+function setUnlocked() {
+  const payload = { v: '1', t: Date.now() };
+  try {
+    localStorage.setItem(UNLOCK_KEY, JSON.stringify(payload));
+    sessionStorage.setItem(UNLOCK_KEY, '1');
+  } catch (e) {
+    // Storage unavailable (private mode etc.) — keep unlocked for this tab/session
+    sessionStorage.setItem(UNLOCK_KEY, '1');
+  }
+}
+
+function isUnlocked() {
+  // Session unlock (per-tab, persistent even with storage issues)
+  if (sessionStorage.getItem(UNLOCK_KEY) === '1') return true;
+
+  // Persistent unlock from a previous visit on this browser
+  try {
+    const raw = localStorage.getItem(UNLOCK_KEY);
+    if (!raw) return false;
+    // Accept both legacy '1' flag and our JSON payload
+    if (raw === '1') return true;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.v === '1') {
+      // Promote to sessionStorage so it survives storage issues
+      sessionStorage.setItem(UNLOCK_KEY, '1');
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
 function checkSitePassword() {
   const input = document.getElementById('site-password-input');
   const err = document.getElementById('site-password-error');
   if (!input) return;
 
   if (simpleHash(input.value) === SITE_PASSWORD_HASH) {
-    localStorage.setItem(UNLOCK_KEY, '1');
+    setUnlocked();
     document.getElementById('password-gate').classList.add('hidden');
     document.body.style.overflow = '';
     initChatIfReady();
@@ -659,4 +690,39 @@ function buildChatBgOptions() {
 
 // ═══════════════════════════════════════════════════════════════
 //  Boot
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
+
+function initChatIfReady() {
+  // Restore session
+  const session = getSession();
+  if (session) {
+    const accounts = getAccounts();
+    if (accounts[session.username]) {
+      const acc = accounts[session.username];
+      currentUser = {
+        username: session.username,
+        displayName: acc.displayName,
+        pfp: acc.pfp || ''
+      };
+      renderAccountView();
+      connectToNetwork();
+    }
+  }
+
+  initChat();
+  buildChatColorOptions();
+  buildChatBgOptions();
+  renderAccountView();
+}
+
+// Password gate on load
+document.addEventListener('DOMContentLoaded', () => {
+  const unlocked = localStorage.getItem(UNLOCK_KEY);
+  if (unlocked === '1') {
+    document.getElementById('password-gate').classList.add('hidden');
+    initChatIfReady();
+  } else {
+    document.body.style.overflow = 'hidden';
+    document.getElementById('site-password-input').focus();
+  }
+});
