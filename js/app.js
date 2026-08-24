@@ -141,7 +141,7 @@ function browserProxyUrl(input) {
     const domain = value.replace(/^https?:\/\//i, '');
     return `https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2F${domain}`;
   }
-  return `https://demo.webfuse.com/+iframetest/?url=https://www.google.com/search?surl=1&q=${encodeURIComponent(value)}`;
+  return `https://demo.webfuse.com/+iframetest/?url=https://search.brave.com/search?q=${encodeURIComponent(value)}`;
 }
 
 function renderBrowserTabs() {
