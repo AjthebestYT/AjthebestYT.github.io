@@ -8,16 +8,28 @@
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     /* Fullscreen Mode: Hide Sidebar & Topbar */
+    :root.fullscreen-active .sidebar,
+    :root.fullscreen-active .topbar,
     :root:has(:fullscreen) .sidebar,
-    :root:has(:fullscreen) .topbar {
+    :root:has(:fullscreen) .topbar,
+    body:has(:fullscreen) .sidebar,
+    body:has(:fullscreen) .topbar {
       display: none !important;
     }
 
+    :root.fullscreen-active .content-area,
     :root:has(:fullscreen) .content-area {
       width: 100vw !important;
       height: 100vh !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+
+    #browser:fullscreen .browser-tabs,
+    #browser:fullscreen .browser-toolbar,
+    #browser:-webkit-full-screen .browser-tabs,
+    #browser:-webkit-full-screen .browser-toolbar {
+      display: none !important;
     }
 
     /* Floating Control Bar for Games & Movies */
@@ -53,6 +65,183 @@
     .player-btn svg {
       width: 14px;
       height: 14px;
+    }
+
+    .browser-wrap {
+      height: 100%;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #12090b;
+    }
+
+    #browser.section.active { height: 100%; }
+
+    .browser-tabs {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 50px;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .browser-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 180px;
+      padding: 8px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .browser-tab span { overflow: hidden; text-overflow: ellipsis; }
+    .browser-tab.active { background: rgba(255,255,255,0.04); }
+    .browser-tab-close { margin-left: 4px; color: var(--muted); font-size: 1rem; line-height: 1; }
+    .browser-tab-close:hover { color: var(--text); }
+
+    .browser-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .browser-control {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .browser-control:hover { color: var(--text); background: var(--surface2); }
+
+    .browser-address {
+      min-width: 0;
+      flex: 1;
+      padding: 9px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.8rem;
+    }
+
+    .browser-frame {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      border: 0;
+      background: #fff;
+      display: none;
+    }
+
+    .browser-frame.active { display: block; }
+
+    .browser-frames {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    #temp-email.section.active {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    #temp-email .tab-container {
+      flex-shrink: 0;
+      margin-bottom: 0 !important;
+    }
+
+    #temp-email .temp-email-fullscreen {
+      align-self: flex-end;
+      margin: 10px 14px 0;
+      padding: 8px 14px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #temp-email .temp-email-fullscreen:hover {
+      background: var(--accent);
+      color: #10150d;
+    }
+
+    #temp-email .tab-content {
+      flex: 1;
+      min-height: 0;
+    }
+
+    #temp-email .tab-content iframe {
+      height: 100% !important;
+      display: block;
+    }
+
+    #temp-email:fullscreen .tab-container,
+    #temp-email:-webkit-full-screen .tab-container,
+    #temp-email:fullscreen .temp-email-fullscreen,
+    #temp-email:-webkit-full-screen .temp-email-fullscreen {
+      display: none !important;
+    }
+
+    .home-browser-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: min(680px, 100%);
+    }
+
+    .home-browser-search input {
+      min-width: 0;
+      flex: 1;
+      padding: 13px 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .home-browser-search button {
+      padding: 13px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #10150d;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .topbar-search {
+      width: min(480px, 45%);
+      padding: 9px 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.2);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.8rem;
     }
 
     /* Force Full Widescreen Layout */
@@ -119,6 +308,14 @@
         Home
       </div>
 
+      <div class="nav-item" data-section="browser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>
+        </svg>
+        Browser
+      </div>
+
       <div class="nav-item" data-section="cloud-gaming">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
@@ -180,7 +377,9 @@
   <div class="content-area">
     <header class="topbar">
       <div class="topbar-title" id="topbar-title">Home</div>
-      <div class="topbar-crumb">Learning V4</div>
+      <form onsubmit="browserSearchFromTop(event)">
+        <input class="topbar-search" id="top-browser-search" type="search" placeholder="Search the web or enter a domain..." aria-label="Search the web or enter a domain" />
+      </form>
     </header>
 
     <main class="main" id="main-content">
@@ -194,6 +393,11 @@
             <h1 class="home-hero-title">Welcome back</h1>
             <p class="home-hero-sub">almost 1 year old</p>
           </div>
+
+          <form class="home-browser-search" onsubmit="browserSearchFromHome(event)">
+            <input id="home-browser-search" type="search" placeholder="Search the web or enter a domain..." aria-label="Search the web or enter a domain" />
+            <button type="submit">Search</button>
+          </form>
 
           <div class="home-grid">
 
@@ -290,6 +494,29 @@
               <div class="home-stat-num">8</div>
               <div class="home-stat-label">Color Themes</div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="browser">
+        <div class="browser-wrap">
+          <div class="browser-tabs" id="browser-tabs">
+            <button class="browser-tab active" type="button">
+              <span class="browser-tab-dot">●</span>
+              <span>New Tab</span>
+              <span class="browser-tab-close" title="Close tab" aria-label="Close tab" onclick="closeBrowserTab(event, 0)">&times;</span>
+            </button>
+            <button class="browser-control" type="button" title="New tab" aria-label="New tab" onclick="newBrowserTab()">+</button>
+          </div>
+          <div class="browser-toolbar">
+            <button class="browser-control" type="button" title="Back" aria-label="Back" onclick="browserGoBack()">&#8592;</button>
+            <button class="browser-control" type="button" title="Forward" aria-label="Forward" onclick="browserGoForward()">&#8594;</button>
+            <button class="browser-control" type="button" title="Reload" aria-label="Reload" onclick="browserReload()">&#8635;</button>
+            <input class="browser-address" id="browser-address" placeholder="Search the web or enter a domain..." aria-label="Address" />
+            <button class="browser-control" type="button" title="Fullscreen" aria-label="Fullscreen" onclick="toggleFullscreen('browser')">&#10530;</button>
+          </div>
+          <div class="browser-frames" id="browser-frames">
+            <iframe class="browser-frame active" id="browser-frame-0" src="about:blank" allow="fullscreen; autoplay"></iframe>
           </div>
         </div>
       </section>
@@ -618,9 +845,10 @@
 <div id="temp-email" class="section">
   <!-- Tab Header Buttons -->
   <div class="tab-container" style="display: flex; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 30px; width: fit-content;">
-    <button class="tab-btn active" onclick="switchTab('tab-raccoon', 'https://raccoongame.com/', this)" style="padding: 8px 16px; border-radius: 20px; border: none; background: #84cc16; color: #000; font-weight: bold; cursor: pointer;">🦝 Raccoon Website</button>
-    <button class="tab-btn" onclick="switchTab('tab-tempmail', 'https://mail.tm/en/', this)" style="padding: 8px 16px; border-radius: 20px; border: none; background: transparent; color: #ccc; font-weight: bold; cursor: pointer;">✉️ Temporary Email</button>
+    <button class="tab-btn active" onclick="switchTab('tab-raccoon', 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fraccoongame.com', this)" style="padding: 8px 16px; border-radius: 20px; border: none; background: var(--accent); color: #000; font-weight: bold; cursor: pointer;">🦝 Raccoon Website</button>
+    <button class="tab-btn" onclick="switchTab('tab-tempmail', 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Ftempmail.ing', this)" style="padding: 8px 16px; border-radius: 20px; border: none; background: transparent; color: #ccc; font-weight: bold; cursor: pointer;">✉️ Temporary Email</button>
   </div>
+  <button class="temp-email-fullscreen" type="button" onclick="toggleFullscreen('temp-email')">Fullscreen</button>
 
   <!-- Tab 1: Raccoon Website -->
   <div id="tab-raccoon" class="tab-content" style="display: block;">

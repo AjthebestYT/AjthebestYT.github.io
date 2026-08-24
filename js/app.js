@@ -2,10 +2,11 @@
 //  Navigation
 // ═══════════════════════════════════════════════════════════════
 
-const sections = ['home', 'cloud-gaming', 'games', 'movies', 'account', 'settings', 'temp-email'];
+const sections = ['home', 'browser', 'cloud-gaming', 'games', 'movies', 'account', 'settings', 'temp-email'];
 
 const sectionTitles = {
   'home': 'Home',
+  'browser': 'Browser',
   'cloud-gaming': 'Cloud Gaming',
   'games': 'Games',
   'movies': 'Movies',
@@ -29,7 +30,7 @@ function switchTab(tabId, rawUrl, btnElement) {
 
   // Highlight active button
   if (btnElement) {
-    btnElement.style.background = '#84cc16';
+    btnElement.style.background = 'var(--accent)';
     btnElement.style.color = '#000';
   }
 
@@ -54,8 +55,36 @@ function switchTab(tabId, rawUrl, btnElement) {
 }
 
 let tempEmailInitialised = false;
+let browserTabs = [{ title: 'New Tab', url: '' }];
+let activeBrowserTab = 0;
+const tempEmailUrls = {
+  'frame-raccoon': 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fraccoongame.com',
+  'frame-tempmail': 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Ftempmail.ing'
+};
+
+function closeTempEmailFrames() {
+  Object.keys(tempEmailUrls).forEach(id => {
+    const frame = document.getElementById(id);
+    if (frame) frame.src = 'about:blank';
+  });
+}
+
+function openTempEmailFrames() {
+  Object.entries(tempEmailUrls).forEach(([id, url]) => {
+    const frame = document.getElementById(id);
+    if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) frame.src = url;
+  });
+}
 
 function switchSection(name) {
+  const tempEmail = document.getElementById('temp-email');
+  const leavingTempEmail = tempEmail?.classList.contains('active') && name !== 'temp-email';
+  if (leavingTempEmail) {
+    closeTempEmailFrames();
+    if (document.fullscreenElement === tempEmail || document.webkitFullscreenElement === tempEmail) {
+      exitFullscreenIfActive();
+    }
+  }
   sections.forEach(s => {
     document.getElementById(s)?.classList.toggle('active', s === name);
   });
@@ -69,6 +98,7 @@ function switchSection(name) {
   // Lazy-init sections
   if (name === 'movies' && !moviesInitialised) initMovies();
   if (name === 'games') renderGames();
+  if (name === 'temp-email') openTempEmailFrames();
 
   // Reset scroll
   document.getElementById('main-content')?.scrollTo(0, 0);
@@ -87,6 +117,116 @@ function switchSection(name) {
   updateFocusableElements();
 }
 
+function getBrowserFrame() {
+  return document.querySelectorAll('.browser-frame')[activeBrowserTab];
+}
+
+function browserGoBack() {
+  getBrowserFrame()?.contentWindow.history.back();
+}
+
+function browserGoForward() {
+  getBrowserFrame()?.contentWindow.history.forward();
+}
+
+function browserReload() {
+  const frame = getBrowserFrame();
+  if (frame) frame.contentWindow.location.reload();
+}
+
+function browserProxyUrl(input) {
+  const value = input.trim();
+  const isDomain = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:\/.*)?$/i.test(value);
+  if (isDomain) {
+    const domain = value.replace(/^https?:\/\//i, '');
+    return `https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2F${domain}`;
+  }
+  return `https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fduckduckgo.com/?q=${encodeURIComponent(value)}`;
+}
+
+function renderBrowserTabs() {
+  const tabs = document.getElementById('browser-tabs');
+  if (!tabs) return;
+  tabs.innerHTML = browserTabs.map((tab, index) => `
+    <button class="browser-tab${index === activeBrowserTab ? ' active' : ''}" type="button" onclick="selectBrowserTab(${index})">
+      <span class="browser-tab-dot">●</span>
+      <span>${tab.title}</span>
+      <span class="browser-tab-close" title="Close tab" aria-label="Close tab" onclick="closeBrowserTab(event, ${index})">&times;</span>
+    </button>
+  `).join('') + '<button class="browser-control" type="button" title="New tab" aria-label="New tab" onclick="newBrowserTab()">+</button>';
+
+  document.querySelectorAll('.browser-frame').forEach((frame, index) => {
+    frame.classList.toggle('active', index === activeBrowserTab);
+  });
+}
+
+function selectBrowserTab(index) {
+  const tab = browserTabs[index];
+  if (!tab) return;
+  activeBrowserTab = index;
+  document.querySelectorAll('.browser-frame').forEach((frame, frameIndex) => {
+    frame.classList.toggle('active', frameIndex === activeBrowserTab);
+  });
+  document.getElementById('browser-address').value = tab.url;
+  renderBrowserTabs();
+}
+
+function newBrowserTab() {
+  browserTabs.push({ title: 'New Tab', url: '' });
+  const frames = document.getElementById('browser-frames');
+  const frame = document.createElement('iframe');
+  frame.className = 'browser-frame';
+  frame.allow = 'fullscreen; autoplay';
+  frame.id = `browser-frame-${browserTabs.length - 1}`;
+  frame.src = 'about:blank';
+  frames.appendChild(frame);
+  selectBrowserTab(browserTabs.length - 1);
+}
+
+function closeBrowserTab(event, index) {
+  event.stopPropagation();
+  if (browserTabs.length === 1) {
+    browserTabs[0] = { title: 'New Tab', url: '' };
+    const frame = document.querySelector('.browser-frame');
+    if (frame) frame.src = 'about:blank';
+    selectBrowserTab(0);
+    return;
+  }
+  browserTabs.splice(index, 1);
+  document.getElementById(`browser-frame-${index}`)?.remove();
+  activeBrowserTab = Math.min(activeBrowserTab, browserTabs.length - 1);
+  selectBrowserTab(activeBrowserTab);
+}
+
+function browserSearch(input) {
+  const value = input.trim();
+  if (!value) return;
+  const url = browserProxyUrl(value);
+  const title = value.length > 24 ? `${value.slice(0, 24)}...` : value;
+  browserTabs[activeBrowserTab] = { title, url };
+  switchSection('browser');
+  const frame = getBrowserFrame();
+  if (frame) frame.src = url;
+  document.getElementById('browser-address').value = url;
+  renderBrowserTabs();
+}
+
+function browserSearchFromHome(event) {
+  event.preventDefault();
+  browserSearch(document.getElementById('home-browser-search').value);
+}
+
+function browserSearchFromTop(event) {
+  event.preventDefault();
+  browserSearch(document.getElementById('top-browser-search').value);
+}
+
+function browserNavigate() {
+  const address = document.getElementById('browser-address');
+  if (!address) return;
+  browserSearch(address.value);
+}
+
 // FIXED: Wrap event listeners in DOMContentLoaded to ensure DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -95,6 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.quick-card').forEach(card => {
     card.addEventListener('click', () => switchSection(card.dataset.goto));
+  });
+
+  document.getElementById('browser-address')?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') browserNavigate();
   });
 });
 
@@ -254,6 +398,16 @@ function toggleFullscreen(elementId) {
     (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen)?.call(document);
   }
 }
+
+function updateFullscreenUi() {
+  const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  document.documentElement.classList.toggle('fullscreen-active', Boolean(isFullscreen));
+}
+
+document.addEventListener('fullscreenchange', updateFullscreenUi);
+document.addEventListener('webkitfullscreenchange', updateFullscreenUi);
+document.addEventListener('MSFullscreenChange', updateFullscreenUi);
+updateFullscreenUi();
 
 function exitFullscreenIfActive() {
   if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
@@ -447,6 +601,7 @@ let orbs = [];
 let meteor = null;
 let meteorTimer = 300;
 let animFrame;
+const cosmicStarColors = ['#ffffff', '#7dd3fc', '#a7f3d0', '#fef08a', '#f9a8d4', '#c4b5fd'];
 
 function hexToRgb(hex) {
   hex = hex.replace('#', '');
@@ -476,9 +631,11 @@ function initParticles() {
     stars.push({
       x: Math.random() * w,
       y: Math.random() * h,
-      r: Math.random() * 1.1 + 0.2,
+      r: Math.random() * 1.4 + 0.35,
       phase: Math.random() * Math.PI * 2,
       speed: 0.008 + Math.random() * 0.02,
+      color: cosmicStarColors[Math.floor(Math.random() * cosmicStarColors.length)],
+      flare: Math.random() > 0.72,
     });
   }
 
@@ -518,6 +675,34 @@ function draw() {
   const rgb2 = hexToRgb(accent2);
   const t = performance.now() / 1000;
 
+  const holeX = canvas.width * 0.78;
+  const holeY = canvas.height * 0.24;
+  const holeSize = Math.max(96, Math.min(canvas.width, canvas.height) * 0.24);
+  ctx.save();
+  ctx.translate(holeX, holeY);
+  ctx.rotate(-0.14);
+  ctx.scale(1, 0.38);
+  ctx.shadowBlur = holeSize * 0.16;
+  ctx.shadowColor = '#ff6b35';
+  const disk = ctx.createRadialGradient(0, 0, holeSize * 0.18, 0, 0, holeSize * 1.25);
+  disk.addColorStop(0, 'rgba(4,5,12,1)');
+  disk.addColorStop(0.2, 'rgba(8,7,16,1)');
+  disk.addColorStop(0.28, 'rgba(255,235,142,0.95)');
+  disk.addColorStop(0.42, 'rgba(255,109,31,0.78)');
+  disk.addColorStop(0.62, 'rgba(227,38,34,0.35)');
+  disk.addColorStop(0.82, 'rgba(105,24,62,0.12)');
+  disk.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = disk;
+  ctx.beginPath();
+  ctx.arc(0, 0, holeSize * 1.25, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#020308';
+  ctx.beginPath();
+  ctx.arc(0, 0, holeSize * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
   // ── Aurora gradient orbs ──
   orbs.forEach(o => {
     o.x += o.vx; o.y += o.vy;
@@ -537,10 +722,26 @@ function draw() {
   // ── Twinkling star field ──
   stars.forEach(s => {
     const a = 0.25 + 0.6 * (0.5 + 0.5 * Math.sin(t * s.speed * 4 + s.phase));
+    const color = s.color;
+    if (s.flare) {
+      ctx.save();
+      ctx.shadowBlur = 14;
+      ctx.shadowColor = color;
+      ctx.strokeStyle = `rgba(${hexToRgb(color)},${a})`;
+      ctx.globalAlpha = a;
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(s.x - 7, s.y); ctx.lineTo(s.x + 7, s.y);
+      ctx.moveTo(s.x, s.y - 7); ctx.lineTo(s.x, s.y + 7);
+      ctx.stroke();
+      ctx.restore();
+    }
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(255,255,255,${a})`;
+    ctx.fillStyle = color;
+    ctx.globalAlpha = a;
     ctx.fill();
+    ctx.globalAlpha = 1;
   });
 
   // ── Constellation connections ──
@@ -765,6 +966,7 @@ setInterval(detectGamepad, 100);
 
 // Initialize theme
 applyTheme(currentTheme);
+buildPalette();
 initParticles();
 detectMouse(); // assume mouse is present on load
 renderGames();

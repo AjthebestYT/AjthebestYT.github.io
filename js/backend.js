@@ -717,8 +717,7 @@ function initChatIfReady() {
 
 // Password gate on load
 document.addEventListener('DOMContentLoaded', () => {
-  const unlocked = localStorage.getItem(UNLOCK_KEY);
-  if (unlocked === '1') {
+  if (isUnlocked()) {
     document.getElementById('password-gate').classList.add('hidden');
     initChatIfReady();
   } else {
