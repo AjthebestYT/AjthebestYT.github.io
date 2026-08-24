@@ -134,6 +134,10 @@ function browserReload() {
   if (frame) frame.contentWindow.location.reload();
 }
 
+function updateBrowserStartPage() {
+  document.getElementById('browser-start-page')?.classList.toggle('hidden', Boolean(browserTabs[activeBrowserTab]?.url));
+}
+
 function browserProxyUrl(input) {
   const value = input.trim();
   const isDomain = /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:\/.*)?$/i.test(value);
@@ -141,7 +145,12 @@ function browserProxyUrl(input) {
     const domain = value.replace(/^https?:\/\//i, '');
     return `https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2F${domain}`;
   }
+<<<<<<< HEAD
   return `https://demo.webfuse.com/+iframetest/?url=https://search.brave.com/search?q=${encodeURIComponent(value)}`;
+=======
+  const query = encodeURIComponent(value).replace(/%20/g, '+');
+  return `https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fsearch.brave.com/search?q=${query}`;
+>>>>>>> d1e4b93 (hi)
 }
 
 function renderBrowserTabs() {
@@ -158,6 +167,7 @@ function renderBrowserTabs() {
   document.querySelectorAll('.browser-frame').forEach((frame, index) => {
     frame.classList.toggle('active', index === activeBrowserTab);
   });
+  updateBrowserStartPage();
 }
 
 function selectBrowserTab(index) {
@@ -209,6 +219,11 @@ function browserSearch(input) {
   if (frame) frame.src = url;
   document.getElementById('browser-address').value = url;
   renderBrowserTabs();
+}
+
+function browserSearchFromStart(event) {
+  event.preventDefault();
+  browserSearch(document.getElementById('browser-start-search').value);
 }
 
 function browserSearchFromHome(event) {

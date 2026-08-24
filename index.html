@@ -155,6 +155,98 @@
       display: flex;
       flex: 1;
       min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .browser-start-page {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      padding: 42px 24px;
+      background:
+        radial-gradient(circle at 15% 18%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 31%),
+        radial-gradient(circle at 85% 76%, color-mix(in srgb, var(--accent2) 9%, transparent), transparent 30%),
+        linear-gradient(135deg, #101713 0%, #0d1110 52%, #12100e 100%);
+    }
+
+    .browser-start-page.hidden { display: none; }
+
+    .browser-start-content {
+      width: min(780px, 100%);
+      text-align: center;
+      animation: browserStartReveal 0.45s ease both;
+    }
+
+    .browser-start-mark {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 18px;
+      display: grid;
+      place-items: center;
+      border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--accent) 15%, #101713);
+      color: var(--accent2);
+      box-shadow: 0 14px 34px color-mix(in srgb, var(--accent) 14%, transparent);
+    }
+
+    .browser-start-mark svg { width: 28px; height: 28px; }
+    .browser-start-content h1 { font-size: 3.2rem; line-height: 1; letter-spacing: -1.5px; }
+    .browser-start-content > p { margin: 12px 0 28px; color: var(--muted); font-size: 0.95rem; }
+
+    .browser-start-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 7px 7px 18px;
+      border: 1px solid color-mix(in srgb, var(--accent) 42%, rgba(255,255,255,0.12));
+      border-radius: 14px;
+      background: rgba(8, 11, 10, 0.72);
+      box-shadow: 0 18px 46px rgba(0,0,0,0.28);
+    }
+
+    .browser-start-search svg { width: 19px; height: 19px; color: var(--muted); flex: 0 0 auto; }
+    .browser-start-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: 1rem; }
+    .browser-start-search button { padding: 11px 18px; border: 0; border-radius: 9px; background: var(--accent); color: #10150d; font: inherit; font-weight: 800; cursor: pointer; }
+    .browser-start-search button:hover { background: var(--accent2); }
+
+    .browser-shortcuts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 34px;
+      text-align: left;
+    }
+
+    .browser-shortcut {
+      min-width: 0;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.045);
+      color: var(--text);
+      cursor: pointer;
+      font: inherit;
+      text-align: left;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .browser-shortcut:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--accent) 58%, transparent); background: rgba(255,255,255,0.075); }
+    .browser-shortcut-icon { width: 32px; height: 32px; display: grid; place-items: center; margin-bottom: 12px; border-radius: 9px; background: var(--shortcut-color); color: #fff; font-weight: 900; }
+    .browser-shortcut strong { display: block; font-size: 0.86rem; }
+    .browser-shortcut span { display: block; margin-top: 4px; color: var(--muted); font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    @keyframes browserStartReveal { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 700px) {
+      .browser-start-page { padding: 28px 16px; align-items: flex-start; }
+      .browser-start-content { margin-top: 8vh; }
+      .browser-start-content h1 { font-size: 2.35rem; }
+      .browser-shortcuts { grid-template-columns: repeat(2, 1fr); }
     }
 
     #temp-email.section.active {
@@ -516,6 +608,28 @@
             <button class="browser-control" type="button" title="Fullscreen" aria-label="Fullscreen" onclick="toggleFullscreen('browser')">&#10530;</button>
           </div>
           <div class="browser-frames" id="browser-frames">
+            <div class="browser-start-page" id="browser-start-page">
+              <div class="browser-start-content">
+                <div class="browser-start-mark">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/><path d="M8 11h6"/>
+                  </svg>
+                </div>
+                <h1>Where to next?</h1>
+                <p>Search the web, or jump back into one of your regular stops.</p>
+                <form class="browser-start-search" onsubmit="browserSearchFromStart(event)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <input id="browser-start-search" type="search" placeholder="Search with Brave..." aria-label="Search with Brave" autocomplete="off" />
+                  <button type="submit">Search</button>
+                </form>
+                <div class="browser-shortcuts">
+                  <button class="browser-shortcut" type="button" onclick="browserSearch('youtube.com')" style="--shortcut-color:#ef1745"><div class="browser-shortcut-icon">▶</div><strong>YouTube</strong><span>youtube.com</span></button>
+                  <button class="browser-shortcut" type="button" onclick="browserSearch('github.com')" style="--shortcut-color:#24292f"><div class="browser-shortcut-icon">⌘</div><strong>GitHub</strong><span>github.com</span></button>
+                  <button class="browser-shortcut" type="button" onclick="browserSearch('discord.com')" style="--shortcut-color:#5865f2"><div class="browser-shortcut-icon">◉</div><strong>Discord</strong><span>discord.com</span></button>
+                  <button class="browser-shortcut" type="button" onclick="browserSearch('google.com')" style="--shortcut-color:#4285f4"><div class="browser-shortcut-icon">G</div><strong>Google</strong><span>google.com</span></button>
+                </div>
+              </div>
+            </div>
             <iframe class="browser-frame active" id="browser-frame-0" src="about:blank" allow="fullscreen; autoplay"></iframe>
           </div>
         </div>
@@ -541,7 +655,7 @@
         <div class="games-wrap">
           <div class="section-header">
             <h1>Games</h1>
-            <p>Browse and play HTML5 games right in your browser.</p>
+            <p>Play the best games ze-man added himself</p>
           </div>
           <div class="movies-search-wrap games-search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -684,7 +798,7 @@
         <div class="account-wrap">
           <div class="section-header">
             <h1>Account</h1>
-            <p>Create an account to use the chat. Usernames must be unique.</p>
+            <p>Create an account .</p>
           </div>
 
           <div id="account-loggedout">
