@@ -433,8 +433,8 @@ function exitFullscreenIfActive() {
 const TMDB_KEY  = atob('NzAzMWE0MDgzMThlYTFiNjlhOGIzMGE4MjNmOWRkNTc=');
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w342';
-const TOUSTREAM = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fmappl.tv/watch/movie/';
-const TOUSTREAM_TV = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fmappl.tv/embed/movie/tou';
+const TOUSTREAM = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Ftoustream.xyz/tou/movies/';
+const TOUSTREAM_TV = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Ftoustream.xyz/tou/tv/';
 
 let moviesInitialised = false;
 let currentMovieTab   = 'movies';
