@@ -96,6 +96,7 @@ function switchSection(name) {
   if (topbarTitle) topbarTitle.textContent = sectionTitles[name] || name;
 
   // Lazy-init sections
+  if (name === 'home') initParticles();
   if (name === 'movies' && !moviesInitialised) initMovies();
   if (name === 'games') renderGames();
   if (name === 'temp-email') openTempEmailFrames();
@@ -610,9 +611,13 @@ let pts = [];
 let stars = [];
 let orbs = [];
 let meteor = null;
+let novae = [];
 let meteorTimer = 300;
+let novaTimer = 520;
+let lastFrameAt = 0;
 let animFrame;
 const cosmicStarColors = ['#ffffff', '#7dd3fc', '#a7f3d0', '#fef08a', '#f9a8d4', '#c4b5fd'];
+const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 function hexToRgb(hex) {
   hex = hex.replace('#', '');
@@ -637,7 +642,7 @@ function initParticles() {
 
   // Distant twinkling star field
   stars = [];
-  const starCount = Math.floor(area / 18000);
+  const starCount = reducedMotionQuery.matches ? 48 : Math.min(140, Math.floor(area / 18000));
   for (let i = 0; i < starCount; i++) {
     stars.push({
       x: Math.random() * w,
@@ -652,7 +657,7 @@ function initParticles() {
 
   // Brighter constellation nodes (connecting web)
   pts = [];
-  const count = Math.floor(area / 14000);
+  const count = reducedMotionQuery.matches ? 10 : Math.min(30, Math.floor(area / 14000));
   for (let i = 0; i < count; i++) {
     pts.push({
       x:     Math.random() * w,
@@ -673,11 +678,26 @@ function initParticles() {
     { x: w * 0.50, y: h * 0.95, r: Math.max(w, h) * 0.58, vx: 0.10, vy: -0.08, alpha: 0.09 },
   ];
 
+  novae = [];
+  meteorTimer = reducedMotionQuery.matches ? Number.POSITIVE_INFINITY : 300;
+  novaTimer = reducedMotionQuery.matches ? Number.POSITIVE_INFINITY : 520;
+  lastFrameAt = 0;
+
   draw();
 }
 
-function draw() {
+function draw(now = performance.now()) {
   if (!canvas || !ctx) return;
+  const home = document.getElementById('home');
+  if (!home?.classList.contains('active')) {
+    animFrame = null;
+    return;
+  }
+  if (!reducedMotionQuery.matches && now - lastFrameAt < 30) {
+    animFrame = requestAnimationFrame(draw);
+    return;
+  }
+  lastFrameAt = now;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const accent  = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#84cc16';
@@ -757,7 +777,7 @@ function draw() {
 
   // ── Constellation connections ──
   for (let i = 0; i < pts.length; i++) {
-    for (let j = i + 1; j < pts.length; j++) {
+    for (let j = i + 1; j < Math.min(pts.length, i + 7); j++) {
       const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
       const d  = Math.sqrt(dx*dx + dy*dy);
       if (d < 120) {
@@ -811,7 +831,7 @@ function draw() {
     meteor.y += meteor.vy;
     meteor.life -= 0.018;
 
-    const tail = 8;
+    const tail = 18;
     var grad = ctx.createLinearGradient(
       meteor.x, meteor.y,
       meteor.x - meteor.vx * tail, meteor.y - meteor.vy * tail
@@ -819,7 +839,7 @@ function draw() {
     grad.addColorStop(0, `rgba(255,255,255,${0.9 * meteor.life})`);
     grad.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.strokeStyle = grad;
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(meteor.x, meteor.y);
     ctx.lineTo(meteor.x - meteor.vx * tail, meteor.y - meteor.vy * tail);
@@ -828,12 +848,45 @@ function draw() {
     if (meteor.life <= 0) meteor = null;
   }
 
-  animFrame = requestAnimationFrame(draw);
+  // ── Nova burst (rare, short-lived stellar flare) ──
+  novaTimer--;
+  if (novaTimer <= 0) {
+    novae.push({
+      x: canvas.width * (0.18 + Math.random() * 0.68),
+      y: canvas.height * (0.12 + Math.random() * 0.46),
+      size: 18 + Math.random() * 28,
+      life: 1,
+    });
+    novaTimer = 700 + Math.random() * 850;
+  }
+  novae = novae.filter(nova => {
+    nova.life -= 0.018;
+    const radius = nova.size * (1.1 - nova.life * 0.35);
+    const glow = ctx.createRadialGradient(nova.x, nova.y, 0, nova.x, nova.y, radius * 4);
+    glow.addColorStop(0, `rgba(255,255,255,${nova.life * 0.9})`);
+    glow.addColorStop(0.12, `rgba(254,240,138,${nova.life * 0.75})`);
+    glow.addColorStop(0.38, `rgba(249,168,212,${nova.life * 0.24})`);
+    glow.addColorStop(1, 'rgba(125,211,252,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(nova.x, nova.y, radius * 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${nova.life * 0.48})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(nova.x, nova.y, radius * 1.6, 0, Math.PI * 2);
+    ctx.stroke();
+    return nova.life > 0;
+  });
+
+  if (!reducedMotionQuery.matches) animFrame = requestAnimationFrame(draw);
 }
 
 window.addEventListener('resize', () => {
   if (document.getElementById('home').classList.contains('active')) initParticles();
 });
+
+reducedMotionQuery.addEventListener?.('change', initParticles);
 
 // ═══════════════════════════════════════════════════════════════
 //  Input Device Detection (Controller + Mouse)

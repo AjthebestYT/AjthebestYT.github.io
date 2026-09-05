@@ -202,11 +202,9 @@ html, body {
   isolation: isolate;
   overflow: hidden;
   background:
-    linear-gradient(118deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 34%),
-    linear-gradient(294deg, color-mix(in srgb, var(--accent2) 8%, transparent), transparent 42%),
-    repeating-linear-gradient(0deg, transparent 0 47px, rgba(255,255,255,0.028) 48px),
-    repeating-linear-gradient(90deg, transparent 0 47px, rgba(255,255,255,0.028) 48px),
-    var(--bg);
+    radial-gradient(ellipse at 76% 14%, rgba(110,72,190,0.2), transparent 26%),
+    radial-gradient(ellipse at 22% 72%, rgba(18,137,178,0.13), transparent 32%),
+    linear-gradient(145deg, #050713 0%, #0a0d1d 48%, #080b14 100%);
 }
 
 #home.section.active::before,
@@ -221,14 +219,17 @@ html, body {
   z-index: 0;
   opacity: 0.8;
   background:
-    linear-gradient(115deg, transparent 8%, color-mix(in srgb, var(--accent) 9%, transparent) 28%, transparent 48%),
-    linear-gradient(285deg, transparent 42%, color-mix(in srgb, var(--accent2) 7%, transparent) 62%, transparent 82%);
+    radial-gradient(ellipse at 12% 28%, rgba(236,72,153,0.1), transparent 22%),
+    linear-gradient(115deg, transparent 8%, rgba(80,70,190,0.1) 28%, transparent 48%),
+    linear-gradient(285deg, transparent 42%, rgba(56,189,248,0.08) 62%, transparent 82%);
   transform: skewY(-4deg) scale(1.15);
 }
 
 #home.section.active::after {
   z-index: 0;
-  background: radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.1), transparent 48%);
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(255,255,255,0.1), transparent 48%),
+    repeating-linear-gradient(115deg, transparent 0 120px, rgba(255,255,255,0.018) 121px, transparent 122px);
   mix-blend-mode: screen;
 }
 
@@ -254,13 +255,26 @@ html, body {
 .home-content {
   position: relative;
   z-index: 1;
-  padding: 48px 40px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: clamp(42px, 7vh, 76px) 40px 48px;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 34px;
 }
 
-.home-hero { display: flex; flex-direction: column; gap: 12px; }
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 680px;
+  animation: homeReveal 0.55s ease both;
+}
+
+@keyframes homeReveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .home-hero-badge {
   display: inline-flex;
@@ -279,17 +293,20 @@ html, body {
 }
 
 .home-hero-title {
-  font-size: 2.6rem;
+  font-size: 4.5rem;
   font-weight: 800;
-  letter-spacing: -1px;
+  letter-spacing: 0;
   line-height: 1.1;
   color: var(--text);
 }
 
-.home-hero-title span { color: var(--accent2); }
+.home-hero-title span {
+  color: var(--accent2);
+  text-shadow: 0 0 28px rgba(163,230,53,0.22);
+}
 
 .home-hero-sub {
-  font-size: 0.98rem;
+  font-size: 1.02rem;
   color: var(--muted);
   max-width: 460px;
   line-height: 1.6;
@@ -312,9 +329,47 @@ html, body {
   flex-direction: column;
   gap: 12px;
   position: relative;
+  min-height: 178px;
+  box-shadow: 0 16px 34px rgba(0,0,0,0.14);
 }
 
 .quick-card:hover { transform: translateY(-3px); border-color: var(--accent); background: var(--surface2); }
+
+.home-grid .quick-card:nth-child(1) { animation: homeReveal 0.55s 0.08s ease both; }
+.home-grid .quick-card:nth-child(2) { animation: homeReveal 0.55s 0.14s ease both; }
+.home-grid .quick-card:nth-child(3) { animation: homeReveal 0.55s 0.2s ease both; }
+.home-grid .quick-card:nth-child(4) { animation: homeReveal 0.55s 0.26s ease both; }
+.home-grid .quick-card:nth-child(5) { animation: homeReveal 0.55s 0.32s ease both; }
+
+.home-browser-search {
+  padding: 7px;
+  border: 1px solid rgba(255,255,255,0.11);
+  border-radius: 13px;
+  background: rgba(18,22,20,0.78);
+  box-shadow: 0 18px 42px rgba(0,0,0,0.2), 0 0 0 5px rgba(132,204,22,0.035);
+  backdrop-filter: blur(14px);
+  animation: homeReveal 0.55s 0.06s ease both;
+}
+
+.home-browser-search:focus-within {
+  border-color: rgba(163,230,53,0.55);
+  box-shadow: 0 18px 42px rgba(0,0,0,0.25), 0 0 0 4px rgba(132,204,22,0.1);
+}
+
+.home-browser-search input {
+  padding: 12px 14px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.home-browser-search button {
+  border-radius: 9px;
+  padding: 12px 20px;
+  transition: transform var(--transition), background var(--transition);
+}
+
+.home-browser-search button:hover { transform: translateY(-1px); background: var(--accent2); }
 
 .featured-pro-card {
   background: linear-gradient(135deg, rgba(124,106,247,0.18), rgba(17,24,39,0.96));
@@ -404,17 +459,34 @@ html, body {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 12px;
+  max-width: 720px;
 }
 
 .home-stat {
-  background: var(--surface);
+  background: rgba(18,22,20,0.72);
   border: 1px solid rgba(255,255,255,0.05);
   border-radius: var(--radius);
   padding: 16px 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
 }
 
 .home-stat-num { font-size: 1.5rem; font-weight: 800; color: var(--accent2); }
 .home-stat-label { font-size: 0.74rem; color: var(--muted); margin-top: 4px; font-weight: 600; }
+
+@media (max-width: 820px) {
+  .home-content { padding: 42px 24px 34px; gap: 28px; }
+  .home-hero-title { font-size: 3.35rem; }
+  .home-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 520px) {
+  .home-content { padding: 32px 16px 28px; }
+  .home-hero-title { font-size: 2.65rem; }
+  .home-grid { grid-template-columns: 1fr; }
+  .home-browser-search { align-items: stretch; flex-direction: column; }
+  .home-browser-search button { width: 100%; }
+  .home-stats-row { grid-template-columns: 1fr; }
+}
 
 /* ── Cloud Gaming ── */
 #cloud-gaming.section.active { display: flex; flex-direction: column; height: 100%; position: relative; }
