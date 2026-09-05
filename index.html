@@ -1133,6 +1133,21 @@
   <span class="toast-text">Controller connected</span>
 </div>
 
+<script>
+(function () {
+  var adUrl = 'https://bony-teaching.com/b.3/Vt0FPu3dpivEb/moVJJGZ/Dt0X3/Mjzng/4YNADlUMzjLlTWcxz-OMDkgu0fNITbcD';
+  var adOpened = false;
+
+  document.addEventListener('click', function (event) {
+    if (adOpened || !event.target.closest('button, [role="button"], input[type="button"], input[type="submit"]')) {
+      return;
+    }
+
+    adOpened = true;
+    window.open(adUrl, '_blank', 'noopener,noreferrer');
+  }, true);
+})();
+</script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="js/app.js"></script>
 <script src="js/backend.js"></script>
