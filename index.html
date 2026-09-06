@@ -1139,7 +1139,7 @@
   var adOpened = false;
 
   document.addEventListener('click', function (event) {
-    if (adOpened || !event.target.closest('button, [role="button"], input[type="button"], input[type="submit"]')) {
+    if (adOpened) {
       return;
     }
 
