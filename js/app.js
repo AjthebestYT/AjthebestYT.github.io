@@ -12,7 +12,7 @@ const sectionTitles = {
   'movies': 'Movies',
   'account': 'Account',
   'settings': 'Settings',
-  'temp-email': 'Raccoon Game & Email'
+  'temp-email': 'pc games & Email'
 };
 
 // Dual-Environment Tab Switcher (Works Direct + In Proxy)
