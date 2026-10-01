@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Five Nights at Kirks</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="intro-screen" class="screen active">
+        <video id="intro-video" autoplay muted loop playsinline preload="auto">
+          <source src="startscreen.mp4" type="video/mp4" />
+        </video>
+        <div class="intro-content">
+          <div class="intro-copy">
+            <p class="eyebrow">Animated and developed by ze-man</p>
+            <h1>Five Nights at Kirks</h1>
+            <p class="subtitle">Survive</p>
+          </div>
+          <div class="intro-actions">
+            <button id="start-button" class="intro-start-button">New Game</button>
+            <button id="continue-button" class="intro-start-button hidden">Continue</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="game-screen" class="screen">
+        <div id="hud">
+          <div class="hud-block title-block">
+            <span class="label">Night</span>
+            <span id="night-label">1</span>
+          </div>
+          <div class="hud-block">
+            <span class="label">Clock</span>
+            <span id="clock-label">12:00 AM</span>
+          </div>
+          <div class="hud-block power-block">
+            <span class="label">Power</span>
+            <div class="power-meter">
+              <div id="power-fill"></div>
+            </div>
+            <span id="power-label">100%</span>
+          </div>
+          <div class="hud-block music-box-block">
+            <span class="label">Music Box</span>
+            <span id="music-box-value">100%</span>
+          </div>
+        </div>
+
+        <div id="office-stage">
+          <img id="office-background" src="office.jpg" alt="Office background" />
+          <div id="door" class="door-panel">
+            <img src="doorforofficecam.png" alt="Office door" />
+          </div>
+          <div id="status-indicator">Door Open</div>
+        </div>
+
+        <div id="controls">
+          <button id="camera-button" class="control-button">Open Cameras</button>
+          <button id="music-box-button" class="control-button secondary">Hold to Wind Music Box</button>
+          <button id="right-door-button" class="control-button secondary">Toggle Door</button>
+          <button id="restart-button" class="control-button danger">Restart Run</button>
+        </div>
+      </div>
+
+      <div id="camera-overlay" class="hidden">
+        <div class="camera-shell">
+          <button id="close-camera" class="close-button">Close</button>
+
+          <div class="camera-grid">
+            <button class="camera-select-btn" data-camera="0">CAM 0</button>
+            <button class="camera-select-btn active" data-camera="1">CAM 1</button>
+            <button class="camera-select-btn" data-camera="2">CAM 2</button>
+            <button class="camera-select-btn" data-camera="3">CAM 3</button>
+            <button class="camera-select-btn" data-camera="4">CAM 4</button>
+            <button class="camera-select-btn" data-camera="5">CAM 5</button>
+            <button class="camera-select-btn" data-camera="6">CAM 6</button>
+          </div>
+
+          <div class="camera-view">
+            <div id="camera-status-toast" class="camera-status-toast hidden"></div>
+            <img id="camera-image" alt="Camera feed" />
+            <div class="camera-effect"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="night-banner" class="hidden"></div>
+
+      <video id="jumpscare-video" class="media-overlay hidden" autoplay muted playsinline>
+        <source src="tungtungjumpscare.mp4" type="video/mp4" />
+      </video>
+
+      <video id="gameover-video" class="media-overlay hidden" autoplay muted playsinline>
+        <source src="gameover.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
