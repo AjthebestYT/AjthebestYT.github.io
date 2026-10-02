@@ -2,7 +2,7 @@
 //  Navigation
 // ═══════════════════════════════════════════════════════════════
 
-const sections = ['home', 'browser', 'cloud-gaming', 'games', 'movies', 'account', 'settings', 'temp-email'];
+const sections = ['home', 'browser', 'cloud-gaming', 'games', 'movies', 'call', 'account', 'settings', 'temp-email'];
 
 const sectionTitles = {
   'home': 'Home',
@@ -10,6 +10,7 @@ const sectionTitles = {
   'cloud-gaming': 'Cloud Gaming',
   'games': 'Games',
   'movies': 'Movies',
+  'call': 'Call',
   'account': 'Account',
   'settings': 'Settings',
   'temp-email': 'pc games & Email'
@@ -100,6 +101,24 @@ function switchSection(name) {
   if (name === 'movies' && !moviesInitialised) initMovies();
   if (name === 'games') renderGames();
   if (name === 'temp-email') openTempEmailFrames();
+  if (name === 'call') {
+    const callFrame = document.getElementById('call-frame');
+    if (callFrame && !callFrame.dataset.loaded) {
+      const callUrl = new URL(callFrame.dataset.src);
+      const apiUrl = new URLSearchParams(window.location.search).get('callApi');
+      const status = document.getElementById('call-api-status');
+      if (apiUrl) {
+        try {
+          callUrl.searchParams.set('api', new URL(apiUrl).origin);
+          if (status) status.hidden = true;
+        } catch {
+          if (status) status.textContent = 'The callApi URL is invalid. Provide the published Replit app URL.';
+        }
+      }
+      callFrame.src = callUrl.toString();
+      callFrame.dataset.loaded = 'true';
+    }
+  }
 
   // Reset scroll
   document.getElementById('main-content')?.scrollTo(0, 0);

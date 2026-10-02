@@ -492,6 +492,12 @@ html, body {
 #cloud-gaming.section.active { display: flex; flex-direction: column; height: 100%; position: relative; }
 #cloud-gaming.section iframe { width: 100%; height: 100%; border: none; }
 
+#call.section.active { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+#call .call-api-status { padding: 10px 16px; background: rgba(127, 29, 29, 0.35); color: #fecaca; font-size: 0.82rem; }
+#call .call-api-status[hidden] { display: none; }
+#call .call-api-status code { color: #fff; }
+#call iframe { width: 100%; flex: 1; min-height: 0; border: 0; background: #09090b; }
+
 /* ── Games (HTML5) ── */
 #games.section.active { display: flex; flex-direction: column; }
 
