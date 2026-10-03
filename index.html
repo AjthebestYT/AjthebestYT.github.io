@@ -359,8 +359,42 @@
 
     .game-player-frame-wrap, .player-frame-wrap {
       width: 100%;
-      height: 100%;
+      height: auto;
       flex: 1;
+      min-height: 0;
+    }
+
+    .game-player-controls {
+      position: relative;
+      inset: auto;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: 0 0 56px;
+      width: 100%;
+      padding: 8px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      background: #101214;
+    }
+
+    #game-player-box:fullscreen,
+    #game-player-box:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      inset: 0;
+    }
+
+    #game-player-box:fullscreen .game-player-controls,
+    #game-player-box:-webkit-full-screen .game-player-controls {
+      display: none;
+    }
+
+    #game-player-box:fullscreen .game-player-frame-wrap,
+    #game-player-box:-webkit-full-screen .game-player-frame-wrap {
+      width: 100%;
+      height: 100%;
+      flex: 1 1 100%;
     }
 
     .game-player-frame-wrap iframe, .player-frame-wrap iframe {
@@ -478,6 +512,7 @@
       <section class="section active" id="home">
         <canvas id="particles-canvas"></canvas>
         <div class="home-vignette"></div>
+        <img class="home-space-visitor" src="tungtungsahur.png" alt="" aria-hidden="true" hidden />
         <div class="home-content">
           <div class="home-hero">
             <div class="home-hero-badge">&#9670; Learning V4</div>
@@ -651,6 +686,13 @@
       </section>
 
       <section class="section" id="call">
+        <div class="floating-fullscreen-btn">
+          <button class="icon-btn accent" type="button" title="Fullscreen" aria-label="Fullscreen calls" onclick="toggleFullscreen('call')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"/>
+            </svg>
+          </button>
+        </div>
         <iframe
           id="call-frame"
           title="CallConnect video calls"
@@ -838,7 +880,7 @@
           <div class="game-player-box" id="game-player-box">
             <span id="game-player-title" class="js-hidden-title"></span>
 
-            <div class="floating-controls">
+            <div class="game-player-controls" aria-label="Game controls">
               <button class="player-btn" onclick="closeGamePlayer()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -1151,5 +1193,43 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="js/app.js"></script>
 <script src="js/backend.js"></script>
+<script>
+(() => {
+  const home = document.getElementById('home');
+  const visitor = document.querySelector('.home-space-visitor');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function scheduleVisitor() {
+    window.setTimeout(() => {
+      if (!home.classList.contains('active') || reducedMotion.matches) {
+        scheduleVisitor();
+        return;
+      }
+
+      const startX = Math.random() * 75 + 5;
+      const startY = Math.random() * 70 + 5;
+      const direction = Math.random() < 0.5 ? -1 : 1;
+      visitor.style.left = `${startX}%`;
+      visitor.style.top = `${startY}%`;
+      visitor.style.setProperty('--space-x', `${direction * (45 + Math.random() * 55)}vw`);
+      visitor.style.setProperty('--space-y', `${Math.random() * 40 - 20}vh`);
+      visitor.style.setProperty('--space-spin', `${direction * (270 + Math.random() * 360)}deg`);
+      const duration = 16 + Math.random() * 12;
+      visitor.style.animationDuration = `${duration}s`;
+      visitor.hidden = false;
+      visitor.classList.remove('drifting');
+      void visitor.offsetWidth;
+      visitor.classList.add('drifting');
+      window.setTimeout(() => {
+        visitor.hidden = true;
+        visitor.classList.remove('drifting');
+        scheduleVisitor();
+      }, duration * 1000);
+    }, 2500 + Math.random() * 7500);
+  }
+
+  scheduleVisitor();
+})();
+</script>
 </body>
 </html>
