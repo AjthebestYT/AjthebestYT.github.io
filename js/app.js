@@ -77,6 +77,19 @@ function openTempEmailFrames() {
   });
 }
 
+function getSiteTheme() {
+  const styles = getComputedStyle(document.documentElement);
+  return Object.fromEntries(['accent', 'accent2', 'bg', 'surface', 'surface2'].map(name => [
+    name,
+    styles.getPropertyValue(`--${name}`).trim()
+  ]));
+}
+
+function syncCallFrameTheme(frame = document.getElementById('call-frame')) {
+  if (!frame?.contentWindow) return;
+  frame.contentWindow.postMessage({ type: 'site-theme', theme: getSiteTheme() }, window.location.origin);
+}
+
 function switchSection(name) {
   const tempEmail = document.getElementById('temp-email');
   const leavingTempEmail = tempEmail?.classList.contains('active') && name !== 'temp-email';
@@ -104,19 +117,13 @@ function switchSection(name) {
   if (name === 'call') {
     const callFrame = document.getElementById('call-frame');
     if (callFrame && !callFrame.dataset.loaded) {
-      const callUrl = new URL(callFrame.dataset.src);
-      const apiUrl = new URLSearchParams(window.location.search).get('callApi');
-      const status = document.getElementById('call-api-status');
-      if (apiUrl) {
-        try {
-          callUrl.searchParams.set('api', new URL(apiUrl).origin);
-          if (status) status.hidden = true;
-        } catch {
-          if (status) status.textContent = 'The callApi URL is invalid. Provide the published Replit app URL.';
-        }
-      }
+      const callUrl = new URL(callFrame.dataset.src, window.location.href);
+      Object.entries(getSiteTheme()).forEach(([name, value]) => callUrl.searchParams.set(`theme-${name}`, value));
       callFrame.src = callUrl.toString();
       callFrame.dataset.loaded = 'true';
+      callFrame.addEventListener('load', () => syncCallFrameTheme(callFrame), { once: true });
+    } else if (callFrame) {
+      syncCallFrameTheme(callFrame);
     }
   }
 
@@ -303,6 +310,7 @@ function applyTheme(key) {
   localStorage.setItem('theme', key);
   document.getElementById('preview-theme-name') &&
     (document.getElementById('preview-theme-name').textContent = t.name);
+  syncCallFrameTheme();
 }
 
 function buildPalette() {
