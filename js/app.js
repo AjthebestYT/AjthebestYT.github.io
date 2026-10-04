@@ -236,11 +236,11 @@ function browserSearch(input) {
   if (!value) return;
   const url = browserProxyUrl(value);
   const title = value.length > 24 ? `${value.slice(0, 24)}...` : value;
-  browserTabs[activeBrowserTab] = { title, url };
+  browserTabs[activeBrowserTab] = { title, url: value };
   switchSection('browser');
   const frame = getBrowserFrame();
   if (frame) frame.src = url;
-  document.getElementById('browser-address').value = url;
+  document.getElementById('browser-address').value = value;
   renderBrowserTabs();
 }
 

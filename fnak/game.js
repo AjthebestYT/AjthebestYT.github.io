@@ -58,12 +58,14 @@ const AI_ATTACK_DELAY = 60;
 const AI_SEQUENCE = [1, 2, 3, 4, 5, 6];
 const LATER_NIGHT_CAMERA_DISABLE_TICKS = 12;
 const KIRK_MOVE_DELAYS = [18, 14, 10, 7, 4];
-const CAM6_ATTACK_TICKS = 22;
+const KIRK_ATTACK_DELAY_SECONDS = [[25, 30], [20, 25], [15, 20], [11, 15], [9, 12]];
+const POWER_DRAIN_PER_TICK = 0.25;
 const MUSIC_BOX_DRAIN_PER_SECOND = 0.85 + (state.currentNight - 1) * 0.25;
 const MUSIC_BOX_WIND_PER_SECOND = 5.5;
 let nightInterval = null;
 let audioContext = null;
 let camera6WarningTimer = 0;
+let camera6AttackDelay = 0;
 let cameraDisableTimer = 0;
 let musicBoxAudio = null;
 let isHoldingMusicBox = false;
@@ -81,6 +83,7 @@ function saveGame() {
       camerasOpen: state.camerasOpen,
       power: state.power,
       musicBox: state.musicBox,
+      musicBoxJumpscareCountdown: state.musicBoxJumpscareCountdown,
       minutesPastMidnight: state.minutesPastMidnight,
       gameStarted: state.gameStarted,
       endGame: state.endGame,
@@ -88,7 +91,9 @@ function saveGame() {
       doorClosed: state.doorClosed,
       kirkMoveCooldown: state.kirkMoveCooldown,
       cameraDisableTimer,
+      camera6WarningTimer,
       camera6DoorHoldTimer,
+      camera6AttackDelay,
     };
     localStorage.setItem(state.saveKey, JSON.stringify(saveData));
   } catch {
@@ -108,6 +113,7 @@ function loadGame() {
     state.camerasOpen = !!saveData.camerasOpen;
     state.power = saveData.power ?? 100;
     state.musicBox = saveData.musicBox ?? 100;
+    state.musicBoxJumpscareCountdown = saveData.musicBoxJumpscareCountdown ?? 0;
     state.minutesPastMidnight = saveData.minutesPastMidnight ?? 0;
     state.gameStarted = !!saveData.gameStarted;
     state.endGame = !!saveData.endGame;
@@ -115,7 +121,9 @@ function loadGame() {
     state.doorClosed = !!saveData.doorClosed;
     state.kirkMoveCooldown = saveData.kirkMoveCooldown ?? getKirkMoveDelay(state.currentNight);
     cameraDisableTimer = saveData.cameraDisableTimer ?? 0;
+    camera6WarningTimer = saveData.camera6WarningTimer ?? 0;
     camera6DoorHoldTimer = saveData.camera6DoorHoldTimer ?? 0;
+    camera6AttackDelay = saveData.camera6AttackDelay ?? 0;
   } catch {
     localStorage.removeItem(state.saveKey);
   }
@@ -336,6 +344,14 @@ function getKirkMoveDelay(night) {
   return KIRK_MOVE_DELAYS[Math.min(Math.max(night - 1, 0), KIRK_MOVE_DELAYS.length - 1)];
 }
 
+function getKirkAttackDelay(night) {
+  const [minimumSeconds, maximumSeconds] = KIRK_ATTACK_DELAY_SECONDS[
+    Math.min(Math.max(night - 1, 0), KIRK_ATTACK_DELAY_SECONDS.length - 1)
+  ];
+  const delaySeconds = minimumSeconds + Math.random() * (maximumSeconds - minimumSeconds);
+  return Math.ceil(delaySeconds / 0.9);
+}
+
 function updateThreatStates() {
   Object.values(state.cameraEnemyMap).forEach((camera) => {
     camera.isActive = false;
@@ -424,7 +440,10 @@ function resolveThreats() {
 
   if (!state.doorClosed) {
     camera6WarningTimer += 1;
-    if (camera6WarningTimer >= CAM6_ATTACK_TICKS) {
+    if (camera6WarningTimer === 1) {
+      camera6AttackDelay = getKirkAttackDelay(state.currentNight);
+    }
+    if (camera6WarningTimer >= camera6AttackDelay) {
       triggerJumpscare();
       return;
     }
@@ -454,7 +473,7 @@ function startNightTimer() {
       return;
     }
 
-    state.power = Math.max(0, state.power - 0.17);
+    state.power = Math.max(0, state.power - POWER_DRAIN_PER_TICK);
     if (state.power <= 0) {
       triggerGameOver();
       return;
@@ -462,6 +481,11 @@ function startNightTimer() {
 
     const boxDrainRate = 2.1 + (state.currentNight - 1) * 0.65;
     state.musicBox = Math.max(0, state.musicBox - boxDrainRate);
+
+    if (isHoldingMusicBox && state.musicBox < 100) {
+      state.musicBox = Math.min(100, state.musicBox + 10);
+      state.power = Math.max(0, state.power - POWER_DRAIN_PER_TICK);
+    }
 
     refreshCam0Visual();
 
@@ -494,14 +518,6 @@ function startNightTimer() {
         button.classList.toggle('active', Number(button.dataset.camera) === 1);
       });
       showCameraStatus('Camera 0 unavailable — music box depleted');
-    }
-
-    if (isHoldingMusicBox && state.musicBox < 100) {
-      state.musicBox = Math.min(100, state.musicBox + 10);
-      state.power = Math.max(0, state.power - 0.17);
-      if (state.musicBox >= 100) {
-        state.musicBox = 100;
-      }
     }
 
     resolveThreats();
@@ -643,6 +659,7 @@ function attachEvents() {
     ensureAudioContext();
     playCameraSound();
     loadGame();
+    prepareNightAssets();
     setCurrentScreen('game');
     resumeNightFlow();
   });
@@ -666,8 +683,10 @@ function attachEvents() {
   elements.cameraButtons.forEach((button) => {
     button.addEventListener('click', () => setCameraSelection(Number(button.dataset.camera)));
   });
-  elements.musicBoxButton.addEventListener('pointerdown', () => {
+  elements.musicBoxButton.addEventListener('pointerdown', (event) => {
     if (!state.isNightActive || state.endGame) return;
+    event.preventDefault();
+    elements.musicBoxButton.setPointerCapture(event.pointerId);
     isHoldingMusicBox = true;
     elements.musicBoxButton.textContent = 'Winding Music Box...';
     ensureAudioContext();
@@ -675,22 +694,18 @@ function attachEvents() {
       musicBoxAudio.play();
     }
   });
-  elements.musicBoxButton.addEventListener('pointerup', () => {
+  const stopWindingMusicBox = () => {
     isHoldingMusicBox = false;
     elements.musicBoxButton.textContent = 'Hold to Wind Music Box';
     if (musicBoxAudio) {
       musicBoxAudio.pause();
       musicBoxAudio.currentTime = 0;
     }
-  });
-  elements.musicBoxButton.addEventListener('pointerleave', () => {
-    isHoldingMusicBox = false;
-    elements.musicBoxButton.textContent = 'Hold to Wind Music Box';
-    if (musicBoxAudio) {
-      musicBoxAudio.pause();
-      musicBoxAudio.currentTime = 0;
-    }
-  });
+  };
+  elements.musicBoxButton.addEventListener('pointerup', stopWindingMusicBox);
+  elements.musicBoxButton.addEventListener('pointercancel', stopWindingMusicBox);
+  elements.musicBoxButton.addEventListener('lostpointercapture', stopWindingMusicBox);
+  window.addEventListener('blur', stopWindingMusicBox);
   elements.restartButton.addEventListener('click', startNewRun);
 }
 
