@@ -461,8 +461,12 @@ function exitFullscreenIfActive() {
 const TMDB_KEY  = atob('NzAzMWE0MDgzMThlYTFiNjlhOGIzMGE4MjNmOWRkNTc=');
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w342';
-const TOUSTREAM = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fcinesrc.st/embed/movie/';
-const TOUSTREAM_TV = 'https://demo.webfuse.com/+iframetest/?url=https%3A%2F%2Fcinesrc.st/embed/tv/';
+const WEBFUSE_PLAYER = 'https://demo.webfuse.com/+iframetest/?url=';
+const VIDROCK_BASE = 'https://vidrock.net';
+
+function getWebfusePlayerUrl(path) {
+  return `${WEBFUSE_PLAYER}${encodeURIComponent(`${VIDROCK_BASE}${path}`)}`;
+}
 
 let moviesInitialised = false;
 let currentMovieTab   = 'movies';
@@ -581,7 +585,7 @@ async function openContent(id, type, title) {
   const epSel = document.getElementById('episode-selector');
   if (type === 'movies') {
     epSel.classList.add('hidden');
-    document.getElementById('player-frame').src = `${TOUSTREAM}${id}`;
+    document.getElementById('player-frame').src = getWebfusePlayerUrl(`/movie/${id}`);
   } else {
     currentShowId = id;
     epSel.classList.remove('hidden');
@@ -617,8 +621,9 @@ async function loadEpisodes() {
 function playEpisode() {
   const season  = document.getElementById('season-select').value;
   const episode = document.getElementById('episode-select').value;
+  if (!currentShowId || !season || !episode) return;
   document.getElementById('player-frame').src =
-    `${TOUSTREAM_TV}/tv/${currentShowId}/${season}/${episode}`;
+    getWebfusePlayerUrl(`/tv/${currentShowId}/${season}/${episode}`);
 }
 
 function closePlayer() {

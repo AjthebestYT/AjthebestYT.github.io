@@ -7,7 +7,7 @@
   <link rel="icon" href="rose-in-teeth-blue-emoji-blue.png" />
   <link rel="stylesheet" href="css/styles.css" />
   <style>
-    /* Fullscreen Mode: Hide Sidebar & Topbar */
+    /* Keep site navigation out of the way while the player is fullscreen. */
     :root.fullscreen-active .sidebar,
     :root.fullscreen-active .topbar,
     :root:has(:fullscreen) .sidebar,
@@ -340,6 +340,18 @@
     .game-player-modal, .player-modal {
       padding: 0 !important;
       margin: 0 !important;
+    }
+
+    #movie-player-box:fullscreen,
+    #movie-player-box:-webkit-full-screen {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: none !important;
+      max-height: none !important;
+      margin: 0;
+      border-radius: 0;
     }
 
     .game-player-box, .player-box {
@@ -937,11 +949,17 @@
             <span id="player-title" class="js-hidden-title"></span>
 
             <div class="floating-controls">
-              <button class="player-btn" onclick="closePlayer()">
+              <button class="player-btn" type="button" onclick="closePlayer()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 12H5M12 19l-7-7 7-7"/>
                 </svg>
                 Back
+              </button>
+              <button class="player-btn" type="button" onclick="toggleFullscreen('movie-player-box')" aria-label="Fullscreen" title="Fullscreen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>
+                </svg>
+                Fullscreen
               </button>
             </div>
 
