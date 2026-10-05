@@ -473,6 +473,14 @@ let currentMovieTab   = 'movies';
 let searchTimer       = null;
 let currentShowId     = null;
 
+function getSavedShowEpisode(showId) {
+  try {
+    return JSON.parse(localStorage.getItem(`show-episode-${showId}`) || 'null');
+  } catch {
+    return null;
+  }
+}
+
 function initMovies() {
   moviesInitialised = true;
   fetchMovies();
@@ -590,11 +598,11 @@ async function openContent(id, type, title) {
     currentShowId = id;
     epSel.classList.remove('hidden');
     document.getElementById('player-frame').src = '';
-    await loadSeasons(id);
+    await loadSeasons(id, getSavedShowEpisode(id));
   }
 }
 
-async function loadSeasons(showId) {
+async function loadSeasons(showId, savedEpisode = null) {
   try {
     const data = await fetchJsonWithTimeout(`${TMDB_BASE}/tv/${showId}?api_key=${TMDB_KEY}`);
     const sel  = document.getElementById('season-select');
@@ -602,11 +610,14 @@ async function loadSeasons(showId) {
       .filter(s => s.season_number > 0)
       .map(s => `<option value="${s.season_number}">Season ${s.season_number}</option>`)
       .join('');
-    await loadEpisodes();
+    if (savedEpisode && [...sel.options].some(option => option.value === String(savedEpisode.season))) {
+      sel.value = savedEpisode.season;
+    }
+    await loadEpisodes(savedEpisode?.season === sel.value ? savedEpisode.episode : null);
   } catch (e) { console.error(e); }
 }
 
-async function loadEpisodes() {
+async function loadEpisodes(savedEpisode = null) {
   const season = document.getElementById('season-select').value;
   try {
     const data = await fetchJsonWithTimeout(`${TMDB_BASE}/tv/${currentShowId}/season/${season}?api_key=${TMDB_KEY}`);
@@ -614,6 +625,9 @@ async function loadEpisodes() {
     sel.innerHTML = (data.episodes || [])
       .map(ep => `<option value="${ep.episode_number}">Ep ${ep.episode_number}: ${ep.name}</option>`)
       .join('');
+    if (savedEpisode && [...sel.options].some(option => option.value === String(savedEpisode))) {
+      sel.value = savedEpisode;
+    }
     playEpisode();
   } catch (e) { console.error(e); }
 }
@@ -622,6 +636,9 @@ function playEpisode() {
   const season  = document.getElementById('season-select').value;
   const episode = document.getElementById('episode-select').value;
   if (!currentShowId || !season || !episode) return;
+  try {
+    localStorage.setItem(`show-episode-${currentShowId}`, JSON.stringify({ season, episode }));
+  } catch (e) { console.error(e); }
   document.getElementById('player-frame').src =
     getWebfusePlayerUrl(`/tv/${currentShowId}/${season}/${episode}`);
 }
