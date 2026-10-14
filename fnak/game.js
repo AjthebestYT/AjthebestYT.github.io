@@ -15,6 +15,7 @@ const state = {
   doorClosed: false,
   saveKey: 'fivenightsatkirks-save',
   maxNight: 5,
+  intenseModeUnlocked: false,
   cameraEnemyMap: {
     0: { isActive: false, image: 'cam 0   100 percent filled.jpg', threatImage: 'cam 0   100 percent filled.jpg' },
     1: { isActive: false, image: 'cam1nokirk.jpg', threatImage: 'cam1withkirk.jpg' },
@@ -32,6 +33,7 @@ const elements = {
   introVideo: document.getElementById('intro-video'),
   startButton: document.getElementById('start-button'),
   continueButton: document.getElementById('continue-button'),
+  intenseModeButton: document.getElementById('intense-mode-button'),
   nightLabel: document.getElementById('night-label'),
   clockLabel: document.getElementById('clock-label'),
   powerLabel: document.getElementById('power-label'),
@@ -50,6 +52,7 @@ const elements = {
   nightBanner: document.getElementById('night-banner'),
   jumpscareVideo: document.getElementById('jumpscare-video'),
   gameoverVideo: document.getElementById('gameover-video'),
+  endingVideo: document.getElementById('ending-video'),
   cameraStatusToast: document.getElementById('camera-status-toast'),
 };
 
@@ -57,8 +60,8 @@ const NIGHT_LENGTH_MINUTES = 360;
 const AI_ATTACK_DELAY = 60;
 const AI_SEQUENCE = [1, 2, 3, 4, 5, 6];
 const LATER_NIGHT_CAMERA_DISABLE_TICKS = 12;
-const KIRK_MOVE_DELAYS = [18, 14, 10, 7, 4];
-const KIRK_ATTACK_DELAY_SECONDS = [[25, 30], [20, 25], [15, 20], [11, 15], [9, 12]];
+const KIRK_MOVE_DELAYS = [18, 14, 10, 7, 4, 2];
+const KIRK_ATTACK_DELAY_SECONDS = [[25, 30], [20, 25], [15, 20], [11, 15], [9, 12], [6, 8]];
 const POWER_DRAIN_PER_TICK = 0.25;
 const MUSIC_BOX_DRAIN_PER_SECOND = 0.85 + (state.currentNight - 1) * 0.25;
 const MUSIC_BOX_WIND_PER_SECOND = 5.5;
@@ -78,6 +81,7 @@ function saveGame() {
   try {
     const saveData = {
       currentNight: state.currentNight,
+      intenseModeUnlocked: state.intenseModeUnlocked,
       currentCamera: state.currentCamera,
       threatCamera: state.threatCamera,
       camerasOpen: state.camerasOpen,
@@ -108,6 +112,7 @@ function loadGame() {
 
     const saveData = JSON.parse(raw);
     state.currentNight = saveData.currentNight || 1;
+    state.intenseModeUnlocked = !!saveData.intenseModeUnlocked;
     state.currentCamera = saveData.currentCamera || 1;
     state.threatCamera = saveData.threatCamera || 1;
     state.camerasOpen = !!saveData.camerasOpen;
@@ -136,13 +141,14 @@ function setCurrentScreen(screen) {
 
   if (screen === 'game' && elements.introVideo) {
     elements.introVideo.pause();
+  } else if (screen === 'intro' && elements.introVideo) {
+    elements.introVideo.play().catch(() => {});
   }
 }
 
 function updateIntroButtons() {
-  const rawSave = localStorage.getItem(state.saveKey);
-  const hasSaved = !!rawSave;
-  elements.continueButton.classList.toggle('hidden', !hasSaved);
+  elements.continueButton.classList.toggle('hidden', !state.gameStarted);
+  elements.intenseModeButton.classList.toggle('hidden', !state.intenseModeUnlocked);
 }
 
 function unlockIntroVideoAudio() {
@@ -203,7 +209,7 @@ function refreshCam0Visual() {
 }
 
 function prepareNightAssets() {
-  state.cameraEnemyMap[5].image = `cam5nokirkday${state.currentNight}.jpg`;
+  state.cameraEnemyMap[5].image = `cam5nokirkday${Math.min(state.currentNight, 5)}.jpg`;
   state.cameraEnemyMap[5].isActive = false;
   refreshCam0Visual();
 
@@ -371,10 +377,10 @@ function updateThreatStates() {
 
   state.cameraEnemyMap[state.threatCamera].isActive = true;
 
-  state.cameraEnemyMap[5].image = `cam5nokirkday${state.currentNight}.jpg`;
+  state.cameraEnemyMap[5].image = `cam5nokirkday${Math.min(state.currentNight, 5)}.jpg`;
 
   if (state.currentNight >= 4 && state.threatCamera === 5 && cameraDisableTimer === 0) {
-    cameraDisableTimer = LATER_NIGHT_CAMERA_DISABLE_TICKS;
+    cameraDisableTimer = state.currentNight >= 6 ? 6 : LATER_NIGHT_CAMERA_DISABLE_TICKS;
     state.camerasOpen = false;
     elements.cameraOverlay.classList.add('hidden');
   }
@@ -473,18 +479,19 @@ function startNightTimer() {
       return;
     }
 
-    state.power = Math.max(0, state.power - POWER_DRAIN_PER_TICK);
+    const powerDrain = POWER_DRAIN_PER_TICK * (state.currentNight >= 6 ? 1.5 : 1);
+    state.power = Math.max(0, state.power - powerDrain);
     if (state.power <= 0) {
       triggerGameOver();
       return;
     }
 
-    const boxDrainRate = 2.1 + (state.currentNight - 1) * 0.65;
+    const boxDrainRate = (2.1 + (state.currentNight - 1) * 0.65) * (state.currentNight >= 6 ? 1.5 : 1);
     state.musicBox = Math.max(0, state.musicBox - boxDrainRate);
 
     if (isHoldingMusicBox && state.musicBox < 100) {
       state.musicBox = Math.min(100, state.musicBox + 10);
-      state.power = Math.max(0, state.power - POWER_DRAIN_PER_TICK);
+      state.power = Math.max(0, state.power - powerDrain);
     }
 
     refreshCam0Visual();
@@ -522,8 +529,11 @@ function startNightTimer() {
 
     resolveThreats();
 
-    if (state.currentNight >= 3 && cameraDisableTimer === 0 && state.camerasOpen && Math.random() < 0.03) {
-      cameraDisableTimer = Math.floor(Math.random() * LATER_NIGHT_CAMERA_DISABLE_TICKS) + 8;
+    const cameraDisableChance = state.currentNight >= 6 ? 0.08 : 0.03;
+    if (state.currentNight >= 3 && cameraDisableTimer === 0 && state.camerasOpen && Math.random() < cameraDisableChance) {
+      cameraDisableTimer = state.currentNight >= 6
+        ? Math.floor(Math.random() * 5) + 4
+        : Math.floor(Math.random() * LATER_NIGHT_CAMERA_DISABLE_TICKS) + 8;
       state.camerasOpen = false;
       elements.cameraOverlay.classList.add('hidden');
     }
@@ -548,14 +558,35 @@ function endNight() {
   clearInterval(nightInterval);
 
   if (state.currentNight >= state.maxNight) {
-    elements.nightBanner.textContent = 'You Survived';
-    elements.nightBanner.classList.remove('hidden');
     state.endGame = true;
     state.gameStarted = false;
-    saveGame();
+    if (state.currentNight === state.maxNight) {
+      state.intenseModeUnlocked = true;
+      saveGame();
+      elements.endingVideo.classList.remove('hidden');
+      elements.endingVideo.currentTime = 0;
+      elements.endingVideo.play().catch(() => {
+        elements.endingVideo.classList.add('hidden');
+        setCurrentScreen('intro');
+        updateIntroButtons();
+      });
+      elements.endingVideo.onended = () => {
+        elements.endingVideo.pause();
+        elements.endingVideo.classList.add('hidden');
+        setCurrentScreen('intro');
+        updateIntroButtons();
+      };
+    } else {
+      saveGame();
+      elements.nightBanner.textContent = 'Intense Mode Complete';
+      elements.nightBanner.classList.remove('hidden');
+      window.setTimeout(() => {
+        setCurrentScreen('intro');
+        updateIntroButtons();
+      }, 1500);
+    }
     return;
   }
-
   state.currentNight += 1;
   state.minutesPastMidnight = 0;
   state.power = 100;
@@ -589,6 +620,8 @@ function startNightFlow() {
   state.doorClosed = false;
   state.camerasOpen = false;
   camera6WarningTimer = 0;
+  camera6DoorHoldTimer = 0;
+  camera6AttackDelay = 0;
   cameraDisableTimer = 0;
   isHoldingMusicBox = false;
   elements.cameraOverlay.classList.add('hidden');
@@ -602,21 +635,8 @@ function startNightFlow() {
   startNightTimer();
 }
 
-function resumeNightFlow() {
-  state.isNightActive = true;
-  state.endGame = false;
-  state.gameStarted = true;
-  state.kirkMoveCooldown = Math.max(1, state.kirkMoveCooldown || getKirkMoveDelay(state.currentNight));
-  elements.cameraOverlay.classList.toggle('hidden', !state.camerasOpen);
-  syncDoorVisuals();
-  setCameraSelection(state.currentCamera);
-  updateHud();
-  saveGame();
-  startNightTimer();
-}
-
-function startNewRun() {
-  state.currentNight = 1;
+function startNewRun(night = 1) {
+  state.currentNight = night;
   state.minutesPastMidnight = 0;
   state.power = 100;
   state.musicBox = 100;
@@ -661,7 +681,13 @@ function attachEvents() {
     loadGame();
     prepareNightAssets();
     setCurrentScreen('game');
-    resumeNightFlow();
+    startNightFlow();
+  });
+  elements.intenseModeButton.addEventListener('click', () => {
+    ensureAudioContext();
+    playCameraSound();
+    setCurrentScreen('game');
+    startNewRun(6);
   });
   elements.cameraButton.addEventListener('click', () => {
     ensureAudioContext();

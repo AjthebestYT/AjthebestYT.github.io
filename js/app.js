@@ -358,7 +358,7 @@ function filterGames(query = '') {
   let visibleCount = 0;
 
   cards.forEach(card => {
-    const title = (card.dataset.name || card.querySelector('.game-card-name')?.textContent || '').toLowerCase();
+    const title = (card.querySelector('.game-card-name')?.textContent || card.dataset.gameTitle || card.dataset.name || '').trim().toLowerCase();
     const match = !term || title.includes(term);
     card.style.display = match ? '' : 'none';
     if (match) visibleCount++;
@@ -373,7 +373,7 @@ function updateGameCount() {
   if (!grid || !statEl) return;
   const cards = [...grid.querySelectorAll('.game-card')];
   const visible = cards.filter(c => c.style.display !== 'none');
-  statEl.textContent = visible.length || cards.length;
+  statEl.textContent = visible.length;
 }
 
 function renderGames() {
