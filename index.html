@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Learning V4</title>
   <link rel="icon" href="rose-in-teeth-blue-emoji-blue.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     /* Keep site navigation out of the way while the player is fullscreen. */
@@ -507,6 +510,7 @@
     </nav>
 
     <div class="sidebar-footer">
+      <div class="site-status" id="site-status" aria-live="polite">--:--</div>
       <div class="version-pill">V4</div>
     </div>
   </aside>
@@ -1155,6 +1159,18 @@
             <p>Currently using <strong id="preview-theme-name">Lime</strong></p>
           </div>
           <div class="preview-pill">V4</div>
+        </div>
+
+        <div class="settings-section-title">Site Theme</div>
+        <div class="site-theme-options" role="group" aria-label="Site theme">
+          <button class="site-theme-option" type="button" data-site-theme-option="normal" aria-pressed="true">
+            <span class="site-theme-swatch normal-theme-swatch" aria-hidden="true"></span>
+            <span class="site-theme-option-copy"><strong>Normal</strong><small>Current Learning V4 layout</small></span>
+          </button>
+          <button class="site-theme-option" type="button" data-site-theme-option="og" aria-pressed="false">
+            <span class="site-theme-swatch og-theme-swatch" aria-hidden="true"></span>
+            <span class="site-theme-option-copy"><strong>OG</strong><small>Classic neon navigation and space home</small></span>
+          </button>
         </div>
 
         <div class="settings-section-title">Color Theme</div>

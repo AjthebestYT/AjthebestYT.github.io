@@ -296,6 +296,43 @@ const themes = {
 };
 
 let currentTheme = localStorage.getItem('theme') || 'lime';
+let currentSiteTheme = localStorage.getItem('site-shell-theme') || 'normal';
+
+function applySiteTheme(theme) {
+  if (theme !== 'normal' && theme !== 'og') return;
+  currentSiteTheme = theme;
+  document.documentElement.dataset.siteTheme = theme;
+  localStorage.setItem('site-shell-theme', theme);
+  document.querySelectorAll('[data-site-theme-option]').forEach(button => {
+    const selected = button.dataset.siteThemeOption === theme;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+}
+
+function initSiteStatus() {
+  const status = document.getElementById('site-status');
+  if (!status) return;
+
+  let battery = null;
+  const updateStatus = () => {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const batteryText = battery ? ` | ${Math.round(battery.level * 100)}%${battery.charging ? '⚡' : ''}` : '';
+    status.textContent = `${time}${batteryText}`;
+    status.title = battery ? `${battery.charging ? 'Charging' : 'Not charging'} · ${Math.round(battery.level * 100)}%` : 'Local time';
+  };
+
+  updateStatus();
+  setInterval(updateStatus, 60_000);
+  if (navigator.getBattery) {
+    navigator.getBattery().then(value => {
+      battery = value;
+      battery.addEventListener('chargingchange', updateStatus);
+      battery.addEventListener('levelchange', updateStatus);
+      updateStatus();
+    }).catch(() => {});
+  }
+}
 
 function applyTheme(key) {
   const t = themes[key];
@@ -1078,7 +1115,12 @@ function removeControllerFocus() {
 setInterval(detectGamepad, 100);
 
 // Initialize theme
+document.querySelectorAll('[data-site-theme-option]').forEach(button => {
+  button.addEventListener('click', () => applySiteTheme(button.dataset.siteThemeOption));
+});
+applySiteTheme(currentSiteTheme);
 applyTheme(currentTheme);
+initSiteStatus();
 buildPalette();
 initParticles();
 detectMouse(); // assume mouse is present on load
