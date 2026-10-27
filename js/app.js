@@ -296,6 +296,12 @@ const themes = {
   teal:    { name: 'Teal',     desc: 'Deep waters',      accent: '#14b8a6', accent2: '#2dd4bf', bg: '#0a1412', surface: '#0f1e1c', surface2: '#162826', tile: '#0f766e' },
 };
 
+const autumnThemeMigrationKey = 'autumn-theme-default-v1';
+if (localStorage.getItem(autumnThemeMigrationKey) !== 'applied') {
+  localStorage.setItem('theme', 'autumn');
+  localStorage.setItem(autumnThemeMigrationKey, 'applied');
+}
+
 let currentTheme = localStorage.getItem('theme') || 'autumn';
 let currentSiteTheme = localStorage.getItem('site-shell-theme') || 'normal';
 
