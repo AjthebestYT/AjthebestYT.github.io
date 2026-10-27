@@ -290,12 +290,13 @@ const themes = {
   purple:  { name: 'Violet',   desc: 'Classic',         accent: '#7c6af7', accent2: '#a78bfa', bg: '#0d0d0f', surface: '#16161a', surface2: '#1e1e24', tile: '#4c3aaf' },
   red:     { name: 'Inferno',  desc: 'Bold & fiery',    accent: '#ef4444', accent2: '#f87171', bg: '#140a0a', surface: '#1e1111', surface2: '#2a1818', tile: '#b91c1c' },
   orange:  { name: 'Sunset',   desc: 'Warm glow',       accent: '#f59e0b', accent2: '#fbbf24', bg: '#14100a', surface: '#1e1810', surface2: '#2a2014', tile: '#b45309' },
+  autumn:  { name: 'Autumn',   desc: 'Golden-hour warmth', accent: '#d97706', accent2: '#fbbf24', bg: '#120c0b', surface: '#1c1310', surface2: '#2a1b16', tile: '#9a3412' },
   pink:    { name: 'Bubblegum', desc: 'Sweet & playful', accent: '#ec4899', accent2: '#f472b6', bg: '#140a10', surface: '#1e1018', surface2: '#2a1424', tile: '#be185d' },
   cyan:    { name: 'Glacier',  desc: 'Ice cold',         accent: '#06b6d4', accent2: '#22d3ee', bg: '#0a1014', surface: '#0f1a1e', surface2: '#162a30', tile: '#0891b2' },
   teal:    { name: 'Teal',     desc: 'Deep waters',      accent: '#14b8a6', accent2: '#2dd4bf', bg: '#0a1412', surface: '#0f1e1c', surface2: '#162826', tile: '#0f766e' },
 };
 
-let currentTheme = localStorage.getItem('theme') || 'lime';
+let currentTheme = localStorage.getItem('theme') || 'autumn';
 let currentSiteTheme = localStorage.getItem('site-shell-theme') || 'normal';
 
 function applySiteTheme(theme) {
@@ -343,6 +344,7 @@ function applyTheme(key) {
   root.setProperty('--bg', t.bg);
   root.setProperty('--surface', t.surface);
   root.setProperty('--surface2', t.surface2);
+  document.documentElement.dataset.colorTheme = key;
   currentTheme = key;
   localStorage.setItem('theme', key);
   document.getElementById('preview-theme-name') &&

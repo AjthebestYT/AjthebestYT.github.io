@@ -1915,3 +1915,169 @@ html[data-site-theme="og"].fullscreen-active #main-content { padding-top: 0; }
   html[data-site-theme="og"] .sidebar > .sidebar-nav:last-of-type .nav-item { padding-inline: 10px; }
   html[data-site-theme="og"] .home-content { padding: 36px 18px; }
 }
+
+/* ── Autumn home ── */
+html[data-color-theme="autumn"] #home.section.active {
+  background:
+    radial-gradient(ellipse at 82% 14%, rgba(217,119,6,0.2), transparent 28%),
+    radial-gradient(ellipse at 16% 78%, rgba(153,54,30,0.18), transparent 34%),
+    linear-gradient(145deg, #100b0b 0%, #1a100d 48%, #100c0b 100%);
+}
+
+html[data-color-theme="autumn"] #home.section.active::before {
+  background:
+    radial-gradient(ellipse at 14% 25%, rgba(251,191,36,0.1), transparent 24%),
+    radial-gradient(ellipse at 83% 72%, rgba(194,65,12,0.12), transparent 30%),
+    linear-gradient(115deg, transparent 10%, rgba(217,119,6,0.08) 40%, transparent 68%);
+}
+
+html[data-color-theme="autumn"] #home.section.active::after {
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(255,221,158,0.11), transparent 48%),
+    repeating-linear-gradient(115deg, transparent 0 120px, rgba(255,220,170,0.018) 121px, transparent 122px);
+}
+
+.fall-leaves,
+.fall-pumpkins { display: none; }
+
+html[data-color-theme="autumn"] .fall-leaves {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.fall-leaves span {
+  position: absolute;
+  top: -12vh;
+  left: var(--leaf-x);
+  font-size: var(--leaf-size);
+  opacity: 0;
+  filter: drop-shadow(0 5px 8px rgba(0,0,0,0.28));
+  animation: leafFall var(--leaf-duration) var(--leaf-delay) linear infinite;
+}
+
+.fall-leaves span:nth-child(1) { --leaf-x: 7%; --leaf-size: 23px; --leaf-duration: 17s; --leaf-delay: -12s; }
+.fall-leaves span:nth-child(2) { --leaf-x: 18%; --leaf-size: 18px; --leaf-duration: 21s; --leaf-delay: -4s; }
+.fall-leaves span:nth-child(3) { --leaf-x: 29%; --leaf-size: 25px; --leaf-duration: 19s; --leaf-delay: -15s; }
+.fall-leaves span:nth-child(4) { --leaf-x: 39%; --leaf-size: 17px; --leaf-duration: 23s; --leaf-delay: -8s; }
+.fall-leaves span:nth-child(5) { --leaf-x: 51%; --leaf-size: 22px; --leaf-duration: 18s; --leaf-delay: -2s; }
+.fall-leaves span:nth-child(6) { --leaf-x: 61%; --leaf-size: 18px; --leaf-duration: 22s; --leaf-delay: -17s; }
+.fall-leaves span:nth-child(7) { --leaf-x: 70%; --leaf-size: 24px; --leaf-duration: 20s; --leaf-delay: -10s; }
+.fall-leaves span:nth-child(8) { --leaf-x: 78%; --leaf-size: 19px; --leaf-duration: 24s; --leaf-delay: -6s; }
+.fall-leaves span:nth-child(9) { --leaf-x: 86%; --leaf-size: 23px; --leaf-duration: 18s; --leaf-delay: -14s; }
+.fall-leaves span:nth-child(10) { --leaf-x: 95%; --leaf-size: 18px; --leaf-duration: 22s; --leaf-delay: -1s; }
+.fall-leaves span:nth-child(11) { --leaf-x: 46%; --leaf-size: 16px; --leaf-duration: 25s; --leaf-delay: -20s; }
+.fall-leaves span:nth-child(12) { --leaf-x: 91%; --leaf-size: 20px; --leaf-duration: 21s; --leaf-delay: -9s; }
+.fall-leaves span:nth-child(13) { --leaf-x: 34%; --leaf-size: 21px; --leaf-duration: 26s; --leaf-delay: -18s; }
+.fall-leaves span:nth-child(14) { --leaf-x: 73%; --leaf-size: 17px; --leaf-duration: 24s; --leaf-delay: -5s; }
+.fall-leaves span:nth-child(15) { --leaf-x: 3%; --leaf-size: 19px; --leaf-duration: 23s; --leaf-delay: -11s; }
+
+@keyframes leafFall {
+  0% { opacity: 0; transform: translate3d(0, -4vh, 0) rotate(0deg); }
+  10% { opacity: 0.78; }
+  90% { opacity: 0.72; }
+  100% { opacity: 0; transform: translate3d(8vw, 118vh, 0) rotate(620deg); }
+}
+
+html[data-color-theme="autumn"] .fall-pumpkins {
+  position: absolute;
+  right: clamp(18px, 4vw, 56px);
+  bottom: 24px;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  pointer-events: none;
+  filter: drop-shadow(0 12px 20px rgba(0,0,0,0.35));
+}
+
+html[data-color-theme="autumn"] .fall-ground {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 150px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 92% 100%, rgba(166,65,21,0.3), transparent 40%),
+    radial-gradient(ellipse at 72% 112%, rgba(238,153,49,0.14), transparent 42%),
+    linear-gradient(0deg, rgba(26,14,10,0.76), rgba(26,14,10,0));
+}
+
+html[data-color-theme="autumn"] .fall-fireflies {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fall-fireflies i {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  left: var(--firefly-x);
+  top: var(--firefly-y);
+  border-radius: 50%;
+  background: #ffe4a3;
+  box-shadow: 0 0 8px 2px rgba(255,196,91,0.48), 0 0 22px 4px rgba(255,156,47,0.2);
+  animation: fireflyGlow var(--firefly-duration) ease-in-out var(--firefly-delay) infinite alternate;
+}
+
+.fall-fireflies i:nth-child(1) { --firefly-x: 10%; --firefly-y: 68%; --firefly-duration: 3.8s; --firefly-delay: -1s; }
+.fall-fireflies i:nth-child(2) { --firefly-x: 27%; --firefly-y: 84%; --firefly-duration: 4.7s; --firefly-delay: -3s; }
+.fall-fireflies i:nth-child(3) { --firefly-x: 66%; --firefly-y: 76%; --firefly-duration: 4.2s; --firefly-delay: -2s; }
+.fall-fireflies i:nth-child(4) { --firefly-x: 83%; --firefly-y: 61%; --firefly-duration: 5.1s; --firefly-delay: -4s; }
+.fall-fireflies i:nth-child(5) { --firefly-x: 94%; --firefly-y: 87%; --firefly-duration: 3.6s; --firefly-delay: -2s; }
+
+@keyframes fireflyGlow {
+  from { opacity: 0.18; transform: translate3d(0, 0, 0) scale(0.7); }
+  to { opacity: 0.86; transform: translate3d(8px, -12px, 0) scale(1.25); }
+}
+
+.fall-pumpkins span:first-child { font-size: clamp(46px, 5vw, 68px); }
+.fall-pumpkins span:last-child { margin: 0 0 -7px -12px; font-size: clamp(34px, 3.8vw, 50px); }
+
+html[data-color-theme="autumn"] .home-hero-badge {
+  color: #ffd28b;
+  background: rgba(217,119,6,0.13);
+  border-color: rgba(251,191,36,0.25);
+}
+
+html[data-color-theme="autumn"] .home-hero-title span {
+  color: #fbbf24;
+  text-shadow: 0 0 30px rgba(245,158,11,0.28);
+}
+
+html[data-color-theme="autumn"] .home-browser-search {
+  box-shadow: 0 18px 42px rgba(0,0,0,0.24), 0 0 0 5px rgba(217,119,6,0.045);
+}
+
+html[data-color-theme="autumn"] .featured-pro-card {
+  background: linear-gradient(135deg, rgba(124,67,30,0.38), rgba(31,20,16,0.97));
+  border-color: rgba(217,119,6,0.56);
+  box-shadow: 0 0 0 1px rgba(217,119,6,0.22), 0 0 30px rgba(194,65,12,0.15), 0 18px 36px rgba(0,0,0,0.28);
+}
+
+html[data-color-theme="autumn"] .featured-pro-card::before {
+  background: linear-gradient(120deg, rgba(255,227,170,0.34), rgba(217,119,6,0), rgba(190,72,35,0.28), rgba(255,255,255,0.08));
+}
+
+html[data-color-theme="autumn"] .featured-pro-card .card-sub { color: #f4d0a6; }
+
+html[data-color-theme="autumn"] .fall-leaves span,
+html[data-color-theme="autumn"] .fall-pumpkins { visibility: visible; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-color-theme="autumn"] .fall-leaves,
+  html[data-color-theme="autumn"] .fall-fireflies { display: none; }
+}
+
+@media (max-width: 560px) {
+  .fall-pumpkins { right: 12px; bottom: 12px; opacity: 0.72; }
+  .fall-pumpkins span:first-child { font-size: 42px; }
+  .fall-pumpkins span:last-child { font-size: 32px; }
+}
