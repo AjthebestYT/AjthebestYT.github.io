@@ -294,15 +294,17 @@ const themes = {
   pink:    { name: 'Bubblegum', desc: 'Sweet & playful', accent: '#ec4899', accent2: '#f472b6', bg: '#140a10', surface: '#1e1018', surface2: '#2a1424', tile: '#be185d' },
   cyan:    { name: 'Glacier',  desc: 'Ice cold',         accent: '#06b6d4', accent2: '#22d3ee', bg: '#0a1014', surface: '#0f1a1e', surface2: '#162a30', tile: '#0891b2' },
   teal:    { name: 'Teal',     desc: 'Deep waters',      accent: '#14b8a6', accent2: '#2dd4bf', bg: '#0a1412', surface: '#0f1e1c', surface2: '#162826', tile: '#0f766e' },
+  christmas: { name: 'Christmas', desc: 'Holiday red & evergreen', accent: '#dc2626', accent2: '#4ade80', bg: '#0b100d', surface: '#111a14', surface2: '#1a281e', tile: '#14532d' },
 };
 
-const autumnThemeMigrationKey = 'autumn-theme-default-v1';
-if (localStorage.getItem(autumnThemeMigrationKey) !== 'applied') {
-  localStorage.setItem('theme', 'autumn');
-  localStorage.setItem(autumnThemeMigrationKey, 'applied');
+const christmasThemeMigrationKey = 'christmas-theme-default-v1';
+if (localStorage.getItem(christmasThemeMigrationKey) !== 'applied') {
+  const savedTheme = localStorage.getItem('theme');
+  if (!savedTheme || savedTheme === 'autumn') localStorage.setItem('theme', 'christmas');
+  localStorage.setItem(christmasThemeMigrationKey, 'applied');
 }
 
-let currentTheme = localStorage.getItem('theme') || 'autumn';
+let currentTheme = localStorage.getItem('theme') || 'christmas';
 let currentSiteTheme = localStorage.getItem('site-shell-theme') || 'normal';
 
 function applySiteTheme(theme) {
@@ -351,6 +353,11 @@ function applyTheme(key) {
   root.setProperty('--surface', t.surface);
   root.setProperty('--surface2', t.surface2);
   document.documentElement.dataset.colorTheme = key;
+  document.querySelectorAll('.color-tile').forEach(tile => {
+    const selected = tile.dataset.theme === key;
+    tile.classList.toggle('active', selected);
+    tile.setAttribute('aria-pressed', String(selected));
+  });
   currentTheme = key;
   localStorage.setItem('theme', key);
   document.getElementById('preview-theme-name') &&
@@ -362,23 +369,21 @@ function buildPalette() {
   const palette = document.getElementById('color-palette');
   if (!palette) return;
   palette.innerHTML = Object.entries(themes).map(([key, t]) => `
-    <div class="color-tile ${key === currentTheme ? 'active' : ''}" data-theme="${key}"
-         style="background: linear-gradient(135deg, ${t.tile}, ${t.tile}cc);">
-      <div class="color-tile-check">
+    <button class="color-tile ${key === currentTheme ? 'active' : ''}" type="button" data-theme="${key}"
+         aria-pressed="${key === currentTheme}" style="background: linear-gradient(135deg, ${t.tile}, ${t.tile}cc);">
+      <span class="color-tile-check">
         <svg viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"/>
         </svg>
-      </div>
-      <div class="color-tile-swatch" style="background: linear-gradient(135deg, ${t.accent}, ${t.accent2});"></div>
-      <div class="color-tile-name">${t.name}</div>
-      <div class="color-tile-desc">${t.desc}</div>
-    </div>
+      </span>
+      <span class="color-tile-swatch" style="background: linear-gradient(135deg, ${t.accent}, ${t.accent2});"></span>
+      <span class="color-tile-name">${t.name}</span>
+      <span class="color-tile-desc">${t.desc}</span>
+    </button>
   `).join('');
 
   palette.querySelectorAll('.color-tile').forEach(tile => {
     tile.addEventListener('click', () => {
-      palette.querySelectorAll('.color-tile').forEach(t => t.classList.remove('active'));
-      tile.classList.add('active');
       applyTheme(tile.dataset.theme);
       if (document.getElementById('home').classList.contains('active')) initParticles();
     });
